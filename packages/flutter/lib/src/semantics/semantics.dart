@@ -1856,6 +1856,15 @@ class SemanticsNode with DiagnosticableTreeMixin {
     }
   }
 
+  /// The bounding box for this node in its coordinate system.
+  bool get isHidden => hasFlag(SemanticsFlag.isHidden);
+  set isHidden(bool value) {
+    if (hasFlag(SemanticsFlag.isHidden) != value) {
+      _flags = _flags ^ SemanticsFlag.isHidden.index;
+      _markDirty();
+    }
+  }
+
   /// The semantic clip from an ancestor that was applied to this node.
   ///
   /// Expressed in the coordinate system of the node. May be null if no clip has
@@ -1978,6 +1987,7 @@ class SemanticsNode with DiagnosticableTreeMixin {
   /// of children.
   late List<SemanticsNode> _debugPreviousSnapshot;
 
+  /// Replace current children.
   void _replaceChildren(List<SemanticsNode> newChildren) {
     assert(!newChildren.any((SemanticsNode child) => child == this));
     assert(() {
@@ -2675,7 +2685,6 @@ class SemanticsNode with DiagnosticableTreeMixin {
     if (mergeAllDescendantsIntoThisNodeValueChanged) {
       _updateChildrenMergeFlags();
     }
-
     assert(
       !_canPerformAction(SemanticsAction.increase) || (value == '') == (increasedValue == ''),
       'A SemanticsNode with action "increase" needs to be annotated with either both "value" and "increasedValue" or neither',
