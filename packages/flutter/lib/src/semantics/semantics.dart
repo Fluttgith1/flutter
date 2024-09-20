@@ -4225,7 +4225,7 @@ class SemanticsConfiguration {
   set childConfigurationsDelegate(ChildSemanticsConfigurationsDelegate? value) {
     assert(value != null);
     _childConfigurationsDelegate = value;
-    hasBeenAnnotated = true;
+    // hasBeenAnnotated = true;
   }
 
   /// Returns the action handler registered for [action] or null if none was
