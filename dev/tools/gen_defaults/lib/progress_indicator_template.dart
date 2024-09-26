@@ -49,7 +49,7 @@ class _Linear${blockName}DefaultsM3 extends ProgressIndicatorThemeData {
   double? get stopIndicatorRadius => ${getToken('md.comp.progress-indicator.stop-indicator.size')} / 2;
 
   @override
-  double? get trackGap => 4.0;
+  double? get trackGap => ${getToken('md.comp.progress-indicator.active-indicator-track-space')};
 }
 ''';
 }

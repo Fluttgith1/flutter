@@ -39,11 +39,10 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
       /// [TickerProviderStateMixin].
       vsync: this,
       duration: const Duration(seconds: 5),
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..repeat(reverse: true);
+    )..addListener(() {
+      setState(() {});
+    })
+    ..repeat(reverse: true);
   }
 
   @override

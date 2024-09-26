@@ -162,9 +162,9 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
   final double animationValue;
   final TextDirection textDirection;
   final BorderRadiusGeometry indicatorBorderRadius;
-  final Color stopIndicatorColor;
-  final double stopIndicatorRadius;
-  final double trackGap;
+  final Color? stopIndicatorColor;
+  final double? stopIndicatorRadius;
+  final double? trackGap;
 
   // The indeterminate progress animation displays two lines whose leading (head)
   // and trailing (tail) endpoints are defined by the following four curves.
@@ -193,7 +193,7 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double effectiveTrackGap = switch (value) {
       null || 1.0 => 0.0,
-      _ => trackGap,
+      _ => trackGap ?? 0.0,
     };
 
     final Rect trackRect;
@@ -218,17 +218,13 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
 
     // Draw the track.
     final RRect trackRRect = indicatorBorderRadius.resolve(textDirection).toRRect(trackRect);
-    final Paint trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.fill;
+    final Paint trackPaint = Paint()..color = trackColor;
     canvas.drawRRect(trackRRect, trackPaint);
 
     void drawStopIndicator() {
       // Limit the stop indicator radius to the height of the indicator.
-      final double radius = math.min(stopIndicatorRadius, size.height / 2);
-      final Paint indicatorPaint = Paint()
-        ..color = stopIndicatorColor
-        ..style = PaintingStyle.fill;
+      final double radius = math.min(stopIndicatorRadius!, size.height / 2);
+      final Paint indicatorPaint = Paint()..color = stopIndicatorColor!;
       final Offset position = switch (textDirection) {
         TextDirection.rtl => Offset(size.height / 2, size.height / 2),
         TextDirection.ltr => Offset(size.width - size.height / 2, size.height / 2),
@@ -237,7 +233,7 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
     }
 
     // Draw the stop indicator.
-    if (value != null && stopIndicatorRadius > 0) {
+    if (value != null && stopIndicatorRadius != null && stopIndicatorRadius !> 0) {
       drawStopIndicator();
     }
 
@@ -245,9 +241,7 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
       if (width <= 0.0) {
         return;
       }
-      final Paint activeIndicatorPaint = Paint()
-        ..color = valueColor
-        ..style = PaintingStyle.fill;
+      final Paint activeIndicatorPaint = Paint()..color = valueColor;
       final double left = switch (textDirection) {
         TextDirection.rtl => size.width - width - x,
         TextDirection.ltr => x,
@@ -459,15 +453,15 @@ class _LinearProgressIndicatorState extends State<LinearProgressIndicator> with 
     final BorderRadiusGeometry borderRadius = widget.borderRadius
       ?? indicatorTheme.borderRadius
       ?? defaults.borderRadius!;
-    final Color stopIndicatorColor = widget.stopIndicatorColor ??
+    final Color? stopIndicatorColor = widget.stopIndicatorColor ??
       indicatorTheme.stopIndicatorColor ??
-      defaults.stopIndicatorColor!;
-    final double stopIndicatorRadius = widget.stopIndicatorRadius ??
+      defaults.stopIndicatorColor;
+    final double? stopIndicatorRadius = widget.stopIndicatorRadius ??
       indicatorTheme.stopIndicatorRadius ??
-      defaults.stopIndicatorRadius!;
-    final double trackGap = widget.trackGap ??
+      defaults.stopIndicatorRadius;
+    final double? trackGap = widget.trackGap ??
       indicatorTheme.trackGap ??
-      defaults.trackGap!;
+      defaults.trackGap;
 
     return widget._buildSemanticsWrapper(
       context: context,
@@ -1169,15 +1163,6 @@ class _LinearProgressIndicatorDefaultsM2 extends ProgressIndicatorThemeData {
 
   @override
   BorderRadius get borderRadius => BorderRadius.zero;
-
-  @override
-  Color get stopIndicatorColor => _colors.primary;
-
-  @override
-  double? get stopIndicatorRadius => 4.0 / 2;
-
-  @override
-  double? get trackGap => 4.0;
 }
 
 // BEGIN GENERATED TOKEN PROPERTIES - ProgressIndicator

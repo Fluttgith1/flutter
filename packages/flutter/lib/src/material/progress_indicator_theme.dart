@@ -73,13 +73,13 @@ class ProgressIndicatorThemeData with Diagnosticable {
   /// Overrides the border radius of the [ProgressIndicator].
   final BorderRadiusGeometry? borderRadius;
 
-  /// Overrides the stop indicator color of the [ProgressIndicator].
+  /// Overrides the stop indicator color of the [LinearProgressIndicator].
   final Color? stopIndicatorColor;
 
-  /// Overrides the stop indicator radius of the [ProgressIndicator].
+  /// Overrides the stop indicator radius of the [LinearProgressIndicator].
   final double? stopIndicatorRadius;
 
-  /// Overrides the gap between the [ProgressIndicator].
+  /// Overrides the gap between the [LinearProgressIndicator].
   final double? trackGap;
 
   /// Creates a copy of this object but with the given fields replaced with the
