@@ -137,17 +137,9 @@ class Scribe {
   }
 
   Future<dynamic> _handleScribeInputInvocation(MethodCall methodCall) async {
-    switch (methodCall.method) {
-      case 'ScribeClient.performHandwritingGesture':
-        assert(activeScribeClient != null);
-        print('Justin ScribeClient.performHandwritingGesture with args ${methodCall.arguments}');
-        // TODO(justinmc): Create enums and stuff to parse the argument.
-        return activeScribeClient!.performHandwritingGesture();
-      case 'ScribeClient.previewHandwritingGesture':
-        assert(activeScribeClient != null);
-        print('Justin ScribeClient.previewHandwritingGesture with args ${methodCall.arguments}');
-        return activeScribeClient!.previewHandwritingGesture();
-    }
+    // TODO(justinmc): Scribe stylus gestures should be supported here.
+    // https://github.com/flutter/flutter/issues/156018
+    throw MissingPluginException();
   }
 }
 
@@ -159,23 +151,9 @@ class Scribe {
 mixin ScribeClient {
   bool get isActive;
 
-  // TODO(justinmc): Double check about providing an implementation and breaking
-  // changes. If you add a new method, will users break?
-  /// Called when Android receives a handwriting gesture.
-  ///
-  /// See also:
-  ///
-  ///  * Android's
-  ///    [InputConnection.performHandwritingGesture](https://developer.android.com/reference/android/view/inputmethod/InputConnection#performHandwritingGesture(android.view.inputmethod.HandwritingGesture,%20java.util.concurrent.Executor,%20java.util.function.IntConsumer))
-  ///    method, from which the engine calls through to this method.
-  Future<bool> performHandwritingGesture() {
-    throw UnimplementedError();
-  }
-
-  void previewHandwritingGesture() {
-    throw UnimplementedError();
-  }
-
   // TODO(justinmc): Is there a cleaner way to adjust for the device pixel ratio?
   double get devicePixelRatio;
+
+  // TODO(justinmc): Scribe stylus gestures should be supported here.
+  // https://github.com/flutter/flutter/issues/156018
 }

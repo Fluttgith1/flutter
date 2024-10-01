@@ -5792,39 +5792,15 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   @override
   bool get isActive => widget.focusNode.hasFocus;
 
-  @override
-  Future<bool> performHandwritingGesture() async {
-    print('justin EditableText.performHandwritingGesture.');
-    return true;
-  }
-
-  @override
-  void previewHandwritingGesture() {
-    print('justin EditableText.previewHandwritingGesture.');
-  }
-
-  /*
-  @override
-  bool performSelectionGesture(Rect selectionArea) {
-    // TODO(justinmc): Works, but selects even if only a tiny corner of a
-    // character is covered. I think by Android's definition, should have to
-    // cover the center of the granularity.
-    _renderEditable.selectPositionAt(
-      from: selectionArea.topLeft,
-      to: selectionArea.bottomRight,
-      // TODO(justinmc): Should this cause be generic or should there also be a scribe value?
-      cause: SelectionChangedCause.scribble,
-    );
-    return true;
-  }
-  */
+  // TODO(justinmc): Scribe stylus gestures should be supported here.
+  // https://github.com/flutter/flutter/issues/156018
 
   // End ScribeClient.
 
   void _handlePanDown(DragDownDetails details) {
   }
 
-  void _handlePointerDown(PointerDownEvent event) async {
+  Future<void> _handlePointerDown(PointerDownEvent event) async {
     if (event.kind != ui.PointerDeviceKind.stylus) {
       return;
     }
@@ -5837,7 +5813,8 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
       // TODO(justinmc): But don't show the keyboard!
       widget.focusNode.requestFocus();
     }
-    Scribe.startStylusHandwriting();
+
+    return Scribe.startStylusHandwriting();
   }
 
   @override
