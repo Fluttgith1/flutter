@@ -4572,7 +4572,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     }
 
     _blocksPreviousSibling = configProvider.effective.isBlockingSemanticsOfPreviouslyPaintedNodes;
-    
+
     if (_blocksPreviousSibling!) {
       return true;
     }
