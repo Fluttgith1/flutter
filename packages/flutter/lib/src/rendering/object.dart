@@ -3622,7 +3622,7 @@ abstract class RenderObject with DiagnosticableTreeMixin implements HitTestTarge
   /// Only valid in debug and profile mode. In release builds, always returns
   /// null.
   SemanticsNode? get debugSemantics {
-    if (!kReleaseMode) {
+    if (!kReleaseMode && _semantics.built) {
       return _semantics.cachedSemanticsNode;
     }
     return null;
@@ -4821,13 +4821,12 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     if (cachedSemanticsNode != null) {
       // Any node other than producedNode in _semanticsNodes are sibling nodes
       // from children fragments. This fragment is responsible for updating
-      // their transform and tags as well as cleaning up.
+      // tags as well as cleaning up.
       //
       // Clean up the properties now so that we don't have stale data in them
       // after the _produceSemanticsNode.
       for (final SemanticsNode node in semanticsNodes) {
         if (node != cachedSemanticsNode) {
-          node.transform = null;
           node.tags = null;
         }
       }
@@ -4855,18 +4854,15 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     assert(built);
 
     // Any node other than producedNode in _semanticsNodes are sibling nodes
-    // from children fragments, their rects are in the same coordinates as the
-    // producedNode.
-    //
-    // See _SemanticsGeometry._computeMergedGeometryFor for sibling node's
-    // geometry is calculated.
+    // from children fragments. They share the same tags as the producedNode.
     final SemanticsNode producedNode = cachedSemanticsNode!;
     for (final SemanticsNode node in semanticsNodes) {
       if (node != producedNode) {
-        node.transform = producedNode.transform;
         if (parentData?.tagsForChildren != null) {
           node.tags ??= <SemanticsTag>{};
           node.tags!.addAll(parentData!.tagsForChildren!);
+        } else if (node.tags?.isEmpty ?? false) {
+          node.tags = null;
         }
       }
     }
@@ -5078,6 +5074,8 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
       final SemanticsNode node = entry.key;
       node
         ..rect = rect!
+        ..transform = null // transform has be taking into account when
+                           // calculating the rect.
         ..parentSemanticsClipRect = semanticsClipRect
         ..parentPaintClipRect = paintClipRect;
     }
