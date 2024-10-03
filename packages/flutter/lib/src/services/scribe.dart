@@ -28,12 +28,6 @@ class Scribe {
     _channel.setMethodCallHandler(_loudlyHandleScribeInputInvocation);
   }
 
-  /// Ensure that a [Scribe] instance has been set up so that the platform
-  /// can handle messages on the scribe method channel.
-  static void ensureInitialized() {
-    _instance; // ignore: unnecessary_statements
-  }
-
   static final Scribe _instance = Scribe._();
 
   /// Set the given [ScribeClient] as the single active client.
@@ -48,7 +42,7 @@ class Scribe {
 
   ScribeClient? _client;
 
-  final MethodChannel _channel = SystemChannels.scribe;
+  static const MethodChannel _channel = SystemChannels.scribe;
 
   final Set<ScribeClient> _scribeClients = <ScribeClient>{};
 
@@ -65,7 +59,7 @@ class Scribe {
   /// * [https://developer.android.com/reference/android/view/inputmethod/InputMethodManager#isStylusHandwritingAvailable()],
   ///   which is the corresponding API on Android.
   static Future<bool?> isStylusHandwritingAvailable() {
-    return _instance._channel.invokeMethod<bool?>(
+    return _channel.invokeMethod<bool?>(
       'Scribe.isStylusHandwritingAvailable',
     );
   }
@@ -81,7 +75,7 @@ class Scribe {
   /// * [https://developer.android.com/reference/android/view/inputmethod/InputMethodManager#startStylusHandwriting(android.view.View)],
   ///   which is the corresponding API on Android.
   static Future<void> startStylusHandwriting() {
-    return _instance._channel.invokeMethod<void>(
+    return _channel.invokeMethod<void>(
       'Scribe.startStylusHandwriting',
     );
   }
@@ -100,6 +94,13 @@ class Scribe {
     );
   }
 
+  /// Registers a [ScribeClient] to receive Scribe input when
+  /// [ScribeClient.isActive] is true.
+  ///
+  /// See also:
+  ///
+  ///  * [unregisterScribeClient], which removes a [ScribeClient] that has
+  ///    previously been registered.
   static void registerScribeClient(ScribeClient scribeClient) {
     _instance._scribeClients.add(scribeClient);
     // TODO(justinmc): Support Scribe hover icon by sending the Rect of each
@@ -107,16 +108,41 @@ class Scribe {
     // https://github.com/flutter/flutter/issues/155948
   }
 
+  /// Unregisters a [ScribeClient] that has previously been registered to
+  /// receive Scribe input.
+  ///
+  /// See also:
+  ///
+  ///  * [registerScribeClient], which registers a [ScribeClient] to receive
+  ///    Scribe input.
   static void unregisterScribeClient(ScribeClient scribeClient) {
     _instance._scribeClients.remove(scribeClient);
   }
 
+  /// Returns the active registered [ScribeClient] with [ScribeClient.isActive].
+  ///
+  /// There should be a maximum of one active [ScribeClient] at any time.
+  ///
+  /// See also:
+  ///
+  ///  * [ScribeClient.registerScribeClient], which is how [ScribeClient]s
+  ///    become registered.
+  ///  * [ScribeClient.unregisterScribeClient], which is how [ScribeClient]s
+  ///    that have previously been registered are removed.
   ScribeClient? get activeScribeClient {
-    final Iterable<ScribeClient> activeClients = _scribeClients.where((ScribeClient client) {
-      return client.isActive;
-    });
-    assert(activeClients.length <= 1);
-    return activeClients.firstOrNull;
+    assert(() {
+      final Iterable<ScribeClient> activeClients = _scribeClients.where((ScribeClient client) {
+        return client.isActive;
+      });
+      return activeClients.length <= 1;
+    }());
+
+    for (final ScribeClient client in _scribeClients) {
+      if (client.isActive) {
+        return client;
+      }
+    }
+    return null;
   }
 
   Future<dynamic> _loudlyHandleScribeInputInvocation(MethodCall call) async {
