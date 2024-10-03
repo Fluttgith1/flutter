@@ -181,6 +181,10 @@ class TextFormField extends FormField<String> {
     ContentInsertionConfiguration? contentInsertionConfiguration,
     MaterialStatesController? statesController,
     Clip clipBehavior = Clip.hardEdge,
+    @Deprecated(
+      'Use `stylusHandwritingEnabled` instead. '
+      'This feature was deprecated after v3.26.0-0.1.pre.',
+    )
     bool scribbleEnabled = true,
     bool stylusHandwritingEnabled = true,
     bool canRequestFocus = true,
