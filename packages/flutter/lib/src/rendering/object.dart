@@ -4509,7 +4509,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
   /// Fragments that will merge up to parent rendering object semantics.
   final List<_SemanticsFragment> mergeUp = <_SemanticsFragment>[];
   final Map<_RenderObjectSemantics, double> _childrenAndElevationAdjustments = <_RenderObjectSemantics, double>{};
-  final List<List<_SemanticsFragment>> siblingMergeGroup = <List<_SemanticsFragment>>[];
+  final List<List<_SemanticsFragment>> siblingMergeGroups = <List<_SemanticsFragment>>[];
   final Map<SemanticsNode, List<_SemanticsFragment>> _producedSiblingNodesAndOwners = <SemanticsNode, List<_SemanticsFragment>>{};
 
   @override
@@ -4594,6 +4594,21 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
 
   void markNeedsBuild() {
     built = false;
+    if (!parentDataDirty && !shouldFormSemanticsNode) {
+      return;
+    }
+    for (final List<_SemanticsFragment> groups in siblingMergeGroups) {
+      for (final _RenderObjectSemantics semantics in groups.whereType<_RenderObjectSemantics>()) {
+        if (semantics.parentDataDirty) {
+          continue;
+        }
+        if (!semantics.shouldFormSemanticsNode) {
+          // This render object semantics will need to be merged into a sibling
+          // node.
+          semantics.markNeedsBuild();
+        }
+      }
+    }
   }
 
   /// Ensures the semantics nodes from this render object semantics subtree are
@@ -4685,7 +4700,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     final bool hasChildConfigurationsDelegate = childConfigurationsDelegate != null;
     final Map<SemanticsConfiguration, _SemanticsFragment> configToFragment = <SemanticsConfiguration, _SemanticsFragment>{};
     final List<_SemanticsFragment> children = <_SemanticsFragment>[];
-    siblingMergeGroup.clear();
+    siblingMergeGroups.clear();
     _childrenAndElevationAdjustments.clear();
     mergeUp.clear();
     for (final _RenderObjectSemantics childSemantics in _getNonBlockedChildren()) {
@@ -4713,7 +4728,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
       if (!childSemantics.contributeToSemanticsTree) {
         // This child semantics needs to propagate sibling merge group to be
         // compiled by parent that contributes to semantics tree.
-        siblingMergeGroup.addAll(childSemantics.siblingMergeGroup);
+        siblingMergeGroups.addAll(childSemantics.siblingMergeGroups);
       }
     }
 
@@ -4730,7 +4745,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
         }),
       );
       for (final Iterable<SemanticsConfiguration> group in result.siblingMergeGroups) {
-        siblingMergeGroup.add(
+        siblingMergeGroups.add(
           group.map<_SemanticsFragment>((SemanticsConfiguration config) {
             return configToFragment[config] ?? _IncompleteSemanticsFragment(config, this);
           }).toList(),
@@ -4743,14 +4758,14 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
       for (final _SemanticsFragment fragment in mergeUp) {
         fragment.markSiblingConfigurationConflict(false);
       }
-      for (final List<_SemanticsFragment> group in siblingMergeGroup) {
+      for (final List<_SemanticsFragment> group in siblingMergeGroups) {
         for (final _SemanticsFragment fragment in group) {
           fragment.markSiblingConfigurationConflict(false);
         }
       }
 
       _marksExplicitInMergeGroup(mergeUp, isMergeUp: true);
-      siblingMergeGroup.forEach(_marksExplicitInMergeGroup);
+      siblingMergeGroups.forEach(_marksExplicitInMergeGroup);
 
       final Iterable<SemanticsConfiguration> mergeUpConfigs = mergeUp
           .map<SemanticsConfiguration?>((_SemanticsFragment fragment) => fragment.config)
@@ -4771,7 +4786,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
             _childrenAndElevationAdjustments[passUpChild] = passUpElevationAdjustment;
             passUpChild.elevationAdjustment = passUpElevationAdjustment;
           }
-          siblingMergeGroup.addAll(childSemantics.siblingMergeGroup);
+          siblingMergeGroups.addAll(childSemantics.siblingMergeGroups);
         }
       }
       // print('this ${describeIdentity(renderObject)} gets _children ${_children.whereType<_RenderObjectSemantics>().map((e) => describeIdentity(e.renderObject)).toList()}');
@@ -4950,7 +4965,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
   }
 
   void _mergeSiblingGroup(Set<int> usedSemanticsIds, _SemanticsGeometry geometry) {
-    for (final List<_SemanticsFragment> group in siblingMergeGroup) {
+    for (final List<_SemanticsFragment> group in siblingMergeGroups) {
       SemanticsConfiguration? configuration;
       SemanticsNode? node;
       for (final _SemanticsFragment fragment in group) {
@@ -4969,6 +4984,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
         usedSemanticsIds.add(node.id);
         for (final _SemanticsFragment fragment in group) {
           if (fragment.config != null) {
+            fragment.owner.built = true;
             fragment.owner.cachedSemanticsNode = node;
           }
         }
@@ -5181,7 +5197,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     parentData = null;
     _blocksPreviousSibling = null;
     mergeUp.clear();
-    siblingMergeGroup.clear();
+    siblingMergeGroups.clear();
     _childrenAndElevationAdjustments.clear();
     semanticsNodes.clear();
     configProvider.clear();
@@ -5222,8 +5238,8 @@ List<DiagnosticsNode> debugDescribeChildren() {
     }
     properties.add(FlagProperty('isSemanticBoundary', value: configProvider.effective.isSemanticBoundary, ifTrue: 'semantic boundary'));
     properties.add(FlagProperty('blocksSemantics', value: isBlockingPreviousSibling, ifTrue: 'BLOCKS SEMANTICS'));
-    if (contributeToSemanticsTree && siblingMergeGroup.isNotEmpty) {
-      properties.add(StringProperty('Sibling group', siblingMergeGroup.toString(), quoted: false));
+    if (contributeToSemanticsTree && siblingMergeGroups.isNotEmpty) {
+      properties.add(StringProperty('Sibling group', siblingMergeGroups.toString(), quoted: false));
     }
   }
 }
