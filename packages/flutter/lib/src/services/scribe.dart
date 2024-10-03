@@ -144,10 +144,13 @@ class Scribe {
 }
 
 /// An interface into Android's stylus handwriting text input.
-
-/// A mixin that to receive focus from the engine.
 ///
-/// This is currently only used to handle UIIndirectScribbleInteraction.
+/// This is typically mixed into a [State].
+///
+/// See also:
+///
+///  * [ScribbleClient], which implements the iOS version of this feature,
+///  [Scribble](https://support.apple.com/guide/ipad/enter-text-with-scribble-ipad355ab2a7/ipados).
 mixin ScribeClient {
   bool get isActive;
 
