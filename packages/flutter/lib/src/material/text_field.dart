@@ -332,7 +332,7 @@ class TextField extends StatefulWidget {
     this.restorationId,
     @Deprecated(
       'Use `stylusHandwritingEnabled` instead. '
-      'This feature was deprecated after v3.22.0-0.3.pre.',
+      'This feature was deprecated after v3.26.0-0.1.pre.',
     )
     this.scribbleEnabled = true,
     this.stylusHandwritingEnabled = true,
@@ -830,7 +830,7 @@ class TextField extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.scribbleEnabled}
   @Deprecated(
     'Use `stylusHandwritingEnabled` instead. '
-    'This feature was deprecated after v3.22.0-0.3.pre.',
+    'This feature was deprecated after v3.26.0-0.1.pre.',
   )
   final bool scribbleEnabled;
 

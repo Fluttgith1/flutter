@@ -883,7 +883,7 @@ class EditableText extends StatefulWidget {
     this.scrollBehavior,
     @Deprecated(
       'Use `stylusHandwritingEnabled` instead. '
-      'This feature was deprecated after v3.22.0-0.3.pre.',
+      'This feature was deprecated after v3.26.0-0.1.pre.',
     )
     this.scribbleEnabled = true,
     this.stylusHandwritingEnabled = true,
@@ -1723,7 +1723,7 @@ class EditableText extends StatefulWidget {
   /// {@endtemplate}
   @Deprecated(
     'Use `stylusHandwritingEnabled` instead. '
-    'This feature was deprecated after v3.22.0-0.3.pre.',
+    'This feature was deprecated after v3.26.0-0.1.pre.',
   )
   final bool scribbleEnabled;
 
