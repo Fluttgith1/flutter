@@ -4848,6 +4848,7 @@ class _RenderObjectSemantics extends _SemanticsFragment with DiagnosticableTreeM
     }
     if (!built) {
       semanticsNodes.clear();
+      _producedSiblingNodesAndOwners.clear();
       _produceSemanticsNode(
         usedSemanticsIds: usedSemanticsIds,
         geometry: geometry,
