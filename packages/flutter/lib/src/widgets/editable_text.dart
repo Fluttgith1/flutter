@@ -20,7 +20,7 @@ import 'dart:ui' as ui hide TextStyle;
 
 import 'package:characters/characters.dart' show CharacterRange, StringCharacters;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart' show DragStartBehavior;
+import 'package:flutter/gestures.dart' show GestureBinding, DragStartBehavior;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -5762,6 +5762,8 @@ class _Scribe extends StatefulWidget {
 }
 
 class _ScribeState extends State<_Scribe> implements ScribeClient {
+  final GlobalKey _key = GlobalKey();
+
   // The handwriting bounds padding of EditText in Android API 34.
   static const EdgeInsets _handwritingPadding = EdgeInsets.symmetric(
     horizontal: 10.0,
@@ -5770,15 +5772,41 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
 
   RenderEditable get _renderEditable => widget.editableKey.currentContext!.findRenderObject()! as RenderEditable;
 
+  Future<void> _handlePointerEvent(PointerEvent event) async {
+    print('justin _handlePointerEvent $event');
+    if (event is! PointerDownEvent
+      || event.kind != ui.PointerDeviceKind.stylus
+      || !(await Scribe.isStylusHandwritingAvailable() ?? false)) {
+      return;
+    }
+    print('justin _handlePointerEvent did it hit? ${event.localPosition}');
+
+    // TODO(justinmc): This hittesting doesn't work. Key is the wrong thing?
+    final RenderBox renderBox = widget.editableKey.currentContext!.findRenderObject()! as RenderBox;
+    if (!renderBox.hitTest(BoxHitTestResult(), position: event.localPosition)) {
+      return;
+    }
+    print('justin _handlePionterEvent hit!');
+
+    if (!widget.focusNode.hasFocus) {
+      // TODO(justinmc): But don't show the keyboard!
+      widget.focusNode.requestFocus();
+    }
+
+    return Scribe.startStylusHandwriting();
+  }
+
   @override
   void initState() {
     super.initState();
     Scribe.registerScribeClient(this);
+    //GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
   }
 
   @override
   void dispose() {
     Scribe.unregisterScribeClient(this);
+    //GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
     super.dispose();
   }
 
@@ -5819,6 +5847,12 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
 
   @override
   Widget build(BuildContext context) {
+    /*
+    return KeyedSubtree(
+      key: _key,
+      child: widget.child,
+    );
+    */
     return Listener(
       onPointerDown: _handlePointerDown,
       child: widget.child,
