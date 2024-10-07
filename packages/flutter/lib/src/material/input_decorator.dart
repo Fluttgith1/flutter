@@ -2886,6 +2886,8 @@ class InputDecoration {
 
   /// Text that suggests what sort of input the field accepts.
   ///
+  /// Using [hintText] can help password manager like Samsung Pass to well detect and autofill the input.
+  ///
   /// Displayed on top of the [InputDecorator.child] (i.e., at the same location
   /// on the screen where text may be entered in the [InputDecorator.child]),
   /// when [InputDecorator.isEmpty] is true and either (a) [labelText] is null
