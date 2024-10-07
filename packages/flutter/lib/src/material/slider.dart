@@ -197,6 +197,11 @@ class Slider extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.allowedInteraction,
+    @Deprecated(
+      'Use SliderTheme to customize the Slider appearance. '
+      'This feature was deprecated after v3.26.0-0.1.pre.'
+    )
+    this.year2023 = false,
   }) : _sliderType = _SliderType.material,
        assert(min <= max),
        assert(value >= min && value <= max,
@@ -238,6 +243,11 @@ class Slider extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.allowedInteraction,
+    @Deprecated(
+      'Use SliderTheme to customize the Slider appearance. '
+      'This feature was deprecated after v3.26.0-0.1.pre.'
+    )
+    this.year2023 = false,
   }) : _sliderType = _SliderType.adaptive,
        assert(min <= max),
        assert(value >= min && value <= max,
@@ -550,6 +560,18 @@ class Slider extends StatefulWidget {
   /// Defaults to [SliderInteraction.tapAndSlide].
   final SliderInteraction? allowedInteraction;
 
+  /// When true, the slider will use the 2023 Material 3 Design appearance.
+  ///
+  /// If false, the slider will use the latest Material 3 Design appearance,
+  /// which was introduced in December 2023.
+  ///
+  /// If [ThemeData.useMaterial3] is false, then this property is ignored.
+  @Deprecated(
+    'Use SliderTheme to customize the Slider appearance. '
+    'This feature was deprecated after v3.26.0-0.1.pre.'
+  )
+  final bool year2023;
+
   final _SliderType _sliderType ;
 
   @override
@@ -782,9 +804,10 @@ class _SliderState extends State<Slider> with TickerProviderStateMixin {
   Widget _buildMaterialSlider(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     SliderThemeData sliderTheme = SliderTheme.of(context);
-    final SliderThemeData defaults = theme.useMaterial3
-      ? _SliderDefaultsM3(context)
-      : _SliderDefaultsM2(context);
+    final SliderThemeData defaults = switch (theme.useMaterial3) {
+      true => widget.year2023 ? _SliderDefaultsM3Year2023(context) : _SliderDefaultsM3(context),
+      false => _SliderDefaultsM2(context),
+    };
 
     // If the widget has active or inactive colors specified, then we plug them
     // in to the slider theme as best we can. If the developer wants more
@@ -1663,8 +1686,8 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
       : trackRect.left + visualPosition * trackRect.width;
     // Apply padding to trackRect.left and trackRect.right if the track height is
     // greater than the thumb radius to ensure the thumb is drawn within the track.
-    final Size thumbSize = _sliderTheme.thumbShape!.getPreferredSize(isInteractive, isDiscrete);
-    final double thumbPadding = (padding > thumbSize.width / 2 ? padding / 2 : 0);
+    final Size thumbPreferredSize = _sliderTheme.thumbShape!.getPreferredSize(isInteractive, isDiscrete);
+    final double thumbPadding = (padding > thumbPreferredSize.width / 2 ? padding / 2 : 0);
     final Offset thumbCenter = Offset(
       clampDouble(
         thumbPosition,
@@ -1678,13 +1701,14 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
       overlayRect = Rect.fromCircle(center: thumbCenter, radius: overlaySize.width / 2.0);
     }
     final Offset? secondaryOffset = (secondaryVisualPosition != null) ? Offset(trackRect.left + secondaryVisualPosition * trackRect.width, trackRect.center.dy) : null;
-    double thumbWidth = _sliderTheme.thumbSize!.resolve(<MaterialState>{})!.width;
-    final double thumbHeight = _sliderTheme.thumbSize!.resolve(<MaterialState>{})!.height;
-    double trackGap = _sliderTheme.trackGap!;
-    final double pressedThumbWidth = _sliderTheme.thumbSize!.resolve(<MaterialState>{ MaterialState.pressed })!.width;
-    final double delta = thumbWidth - pressedThumbWidth;
 
-    if (_active) {
+    double? thumbWidth = _sliderTheme.thumbSize?.resolve(<MaterialState>{})?.width;
+    final double? thumbHeight = _sliderTheme.thumbSize?.resolve(<MaterialState>{})?.height;
+    double? trackGap = _sliderTheme.trackGap;
+    final double? pressedThumbWidth = _sliderTheme.thumbSize?.resolve(<MaterialState>{ MaterialState.pressed })?.width;
+    final double delta;
+    if (_active && thumbWidth != null && pressedThumbWidth != null && trackGap != null) {
+      delta = thumbWidth - pressedThumbWidth;
       if (thumbWidth > 0.0) {
         thumbWidth = pressedThumbWidth;
       }
@@ -1782,7 +1806,9 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
       isDiscrete: isDiscrete,
       labelPainter: _labelPainter,
       parentBox: this,
-      sliderTheme: _sliderTheme.copyWith(thumbSize: MaterialStatePropertyAll<Size>(Size(thumbWidth, thumbHeight))),
+      sliderTheme: thumbWidth != null && thumbHeight != null
+        ? _sliderTheme.copyWith(thumbSize: MaterialStatePropertyAll<Size?>(Size(thumbWidth, thumbHeight)))
+        : _sliderTheme,
       textDirection: _textDirection,
       value: _value,
       textScaleFactor: textScaleFactor,
@@ -2048,6 +2074,88 @@ class _SliderDefaultsM2 extends SliderThemeData {
 
   @override
   double? get trackGap => 6.0;
+}
+
+class _SliderDefaultsM3Year2023 extends SliderThemeData {
+  _SliderDefaultsM3Year2023(this.context)
+    : super(trackHeight: 4.0);
+
+  final BuildContext context;
+  late final ColorScheme _colors = Theme.of(context).colorScheme;
+
+  @override
+  Color? get activeTrackColor => _colors.primary;
+
+  @override
+  Color? get inactiveTrackColor => _colors.surfaceContainerHighest;
+
+  @override
+  Color? get secondaryActiveTrackColor => _colors.primary.withOpacity(0.54);
+
+  @override
+  Color? get disabledActiveTrackColor => _colors.onSurface.withOpacity(0.38);
+
+  @override
+  Color? get disabledInactiveTrackColor => _colors.onSurface.withOpacity(0.12);
+
+  @override
+  Color? get disabledSecondaryActiveTrackColor => _colors.onSurface.withOpacity(0.12);
+
+  @override
+  Color? get activeTickMarkColor => _colors.onPrimary.withOpacity(0.38);
+
+  @override
+  Color? get inactiveTickMarkColor => _colors.onSurfaceVariant.withOpacity(0.38);
+
+  @override
+  Color? get disabledActiveTickMarkColor => _colors.onSurface.withOpacity(0.38);
+
+  @override
+  Color? get disabledInactiveTickMarkColor => _colors.onSurface.withOpacity(0.38);
+
+  @override
+  Color? get thumbColor => _colors.primary;
+
+  @override
+  Color? get disabledThumbColor => Color.alphaBlend(_colors.onSurface.withOpacity(0.38), _colors.surface);
+
+  @override
+  Color? get overlayColor => MaterialStateColor.resolveWith((Set<MaterialState> states) {
+    if (states.contains(MaterialState.dragged)) {
+      return _colors.primary.withOpacity(0.1);
+    }
+    if (states.contains(MaterialState.hovered)) {
+      return _colors.primary.withOpacity(0.08);
+    }
+    if (states.contains(MaterialState.focused)) {
+      return _colors.primary.withOpacity(0.1);
+    }
+
+    return Colors.transparent;
+  });
+
+  @override
+  TextStyle? get valueIndicatorTextStyle => Theme.of(context).textTheme.labelMedium!.copyWith(
+    color: _colors.onPrimary,
+  );
+
+  @override
+  Color? get valueIndicatorColor => _colors.primary;
+
+  @override
+  SliderComponentShape? get valueIndicatorShape => const DropSliderValueIndicatorShape();
+
+  @override
+  SliderComponentShape? get thumbShape => const RoundSliderThumbShape();
+
+  @override
+  SliderTrackShape? get trackShape => const RoundedRectSliderTrackShape();
+
+  @override
+  SliderComponentShape? get overlayShape => const RoundSliderOverlayShape();
+
+  @override
+  SliderTickMarkShape? get tickMarkShape => const RoundSliderTickMarkShape();
 }
 
 // TODO(quncheng): Update M3 defaults to match the latest specs.

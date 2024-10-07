@@ -5279,4 +5279,144 @@ void main() {
       paints..scale()..rrect(color: theme.colorScheme.inverseSurface)..paragraph(),
     );
   }, variant: TargetPlatformVariant.desktop());
+
+  testWidgets('Slider.year2023 set to true enables 2023 Material 3 Design appearance', (WidgetTester tester) async {
+    debugDisableShadows = false;
+    final ThemeData theme = ThemeData();
+    final ColorScheme colorScheme = theme.colorScheme;
+    const double trackHeight = 4.0;
+    final Color activeTrackColor = Color(colorScheme.primary.value);
+    final Color inactiveTrackColor = colorScheme.surfaceContainerHighest;
+    final Color secondaryActiveTrackColor = colorScheme.primary.withOpacity(0.54);
+    final Color disabledActiveTrackColor = colorScheme.onSurface.withOpacity(0.38);
+    final Color disabledInactiveTrackColor = colorScheme.onSurface.withOpacity(0.12);
+    final Color disabledSecondaryActiveTrackColor = colorScheme.onSurface.withOpacity(0.12);
+    final Color shadowColor = colorScheme.shadow;
+    final Color thumbColor = Color(colorScheme.primary.value);
+    final Color disabledThumbColor = Color.alphaBlend(colorScheme.onSurface.withOpacity(0.38), colorScheme.surface);
+    final Color activeTickMarkColor = colorScheme.onPrimary.withOpacity(0.38);
+    final Color inactiveTickMarkColor = colorScheme.onSurfaceVariant.withOpacity(0.38);
+    final Color disabledActiveTickMarkColor = colorScheme.onSurface.withOpacity(0.38);
+    final Color disabledInactiveTickMarkColor = colorScheme.onSurface.withOpacity(0.38);
+
+    try {
+      double value = 0.45;
+      Widget buildApp({
+        int? divisions,
+        bool enabled = true,
+      }) {
+        final ValueChanged<double>? onChanged = !enabled
+          ? null
+          : (double d) {
+              value = d;
+            };
+        return MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Material(
+              child: Center(
+                child: Theme(
+                  data: theme,
+                  child: Slider(
+                    year2023: true,
+                    value: value,
+                    secondaryTrackValue: 0.75,
+                    label: '$value',
+                    divisions: divisions,
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(buildApp());
+
+      final MaterialInkController material = Material.of(tester.element(find.byType(Slider)));
+
+      // Test default track height.
+      const Radius radius = Radius.circular(trackHeight / 2);
+      const Radius activatedRadius = Radius.circular((trackHeight + 2) / 2);
+      expect(
+        material,
+        paints
+          // Inactive track.
+          ..rrect(
+            rrect: RRect.fromLTRBR(360.4, 298.0, 776.0, 302.0, radius),
+            color: inactiveTrackColor,
+          )
+          // Active track.
+          ..rrect(
+            rrect: RRect.fromLTRBR(24.0, 297.0, 364.4, 303.0, activatedRadius),
+            color: activeTrackColor,
+          ),
+      );
+
+      // Test default colors for enabled slider.
+      expect(material, paints..rrect(color: inactiveTrackColor)..rrect(color: activeTrackColor)..rrect(color: secondaryActiveTrackColor));
+      expect(material, paints..shadow(color: shadowColor));
+      expect(material, paints..circle(color: thumbColor));
+      expect(material, isNot(paints..circle(color: disabledThumbColor)));
+      expect(material, isNot(paints..rrect(color: disabledActiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: disabledInactiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: disabledSecondaryActiveTrackColor)));
+      expect(material, isNot(paints..circle(color: activeTickMarkColor)));
+      expect(material, isNot(paints..circle(color: inactiveTickMarkColor)));
+
+      // Test defaults colors for discrete slider.
+      await tester.pumpWidget(buildApp(divisions: 3));
+      expect(material, paints..rrect(color: inactiveTrackColor)..rrect(color: activeTrackColor)..rrect(color: secondaryActiveTrackColor));
+      expect(
+        material,
+        paints
+          ..circle(color: activeTickMarkColor)
+          ..circle(color: activeTickMarkColor)
+          ..circle(color: inactiveTickMarkColor)
+          ..circle(color: inactiveTickMarkColor)
+          ..shadow(color: Colors.black)
+          ..circle(color: thumbColor),
+      );
+      expect(material, isNot(paints..circle(color: disabledThumbColor)));
+      expect(material, isNot(paints..rrect(color: disabledActiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: disabledInactiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: disabledSecondaryActiveTrackColor)));
+
+      // Test defaults colors for disabled slider.
+      await tester.pumpWidget(buildApp(enabled: false));
+      await tester.pumpAndSettle();
+      expect(
+        material,
+        paints
+          ..rrect(color: disabledInactiveTrackColor)
+          ..rrect(color: disabledActiveTrackColor)
+          ..rrect(color: disabledSecondaryActiveTrackColor),
+      );
+      expect(material, paints..shadow(color: shadowColor)..circle(color: disabledThumbColor));
+      expect(material, isNot(paints..circle(color: thumbColor)));
+      expect(material, isNot(paints..rrect(color: activeTrackColor)));
+      expect(material, isNot(paints..rrect(color: inactiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: secondaryActiveTrackColor)));
+
+      // Test defaults colors for disabled discrete slider.
+      await tester.pumpWidget(buildApp(divisions: 3, enabled: false));
+      expect(
+        material,
+        paints
+          ..circle(color: disabledActiveTickMarkColor)
+          ..circle(color: disabledActiveTickMarkColor)
+          ..circle(color: disabledInactiveTickMarkColor)
+          ..circle(color: disabledInactiveTickMarkColor)
+          ..shadow(color: shadowColor)
+          ..circle(color: disabledThumbColor),
+      );
+      expect(material, isNot(paints..circle(color: thumbColor)));
+      expect(material, isNot(paints..rrect(color: activeTrackColor)));
+      expect(material, isNot(paints..rrect(color: inactiveTrackColor)));
+      expect(material, isNot(paints..rrect(color: secondaryActiveTrackColor)));
+    } finally {
+      debugDisableShadows = true;
+    }
+  });
 }
