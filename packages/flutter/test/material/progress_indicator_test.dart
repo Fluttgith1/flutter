@@ -119,7 +119,7 @@ void main() {
     );
   });
 
-  testWidgets('LinearProgressIndicator paint (LTR)', (WidgetTester tester) async {
+  testWidgets('LinearProgressIndicator determinate paint (LTR)', (WidgetTester tester) async {
     const double trackGap = 4.0;
     await tester.pumpWidget(
       Theme(
@@ -148,7 +148,36 @@ void main() {
     expect(tester.binding.transientCallbackCount, 0);
   });
 
-  testWidgets('LinearProgressIndicator paint (RTL)', (WidgetTester tester) async {
+  testWidgets('LinearProgressIndicator determinate paint (LTR) - year2023', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: theme,
+        child: const Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              width: 200.0,
+              child: LinearProgressIndicator(
+                value: 0.25,
+                year2023: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byType(LinearProgressIndicator),
+      paints
+        ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 200.0, 4.0, Radius.zero))
+        ..rect(rect: const Rect.fromLTRB(0.0, 0.0, 50.0, 4.0)),
+    );
+
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('LinearProgressIndicator determinate paint (RTL)', (WidgetTester tester) async {
     const double trackGap = 4.0;
     await tester.pumpWidget(
       Theme(
@@ -172,6 +201,35 @@ void main() {
         ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 150.0 - trackGap, 4.0, const Radius.circular(2.0)))
         // Active indicator.
         ..rrect(rrect: RRect.fromLTRBR(150.0, 0.0, 200.0, 4.0, const Radius.circular(2.0))),
+    );
+
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('LinearProgressIndicator determinate paint (RTL) - year2023', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: theme,
+        child: const Directionality(
+          textDirection: TextDirection.rtl,
+          child: Center(
+            child: SizedBox(
+              width: 200.0,
+              child: LinearProgressIndicator(
+                value: 0.25,
+                year2023: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byType(LinearProgressIndicator),
+      paints
+        ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 200.0, 4.0, Radius.zero))
+        ..rect(rect: const Rect.fromLTRB(150.0, 0.0, 200.0, 4.0)),
     );
 
     expect(tester.binding.transientCallbackCount, 0);
@@ -209,6 +267,36 @@ void main() {
     expect(tester.binding.transientCallbackCount, 1);
   });
 
+  testWidgets('LinearProgressIndicator indeterminate (LTR) - year2023', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: theme,
+        child: const Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              width: 200.0,
+              child: LinearProgressIndicator(year2023: true),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 300));
+    final double animationValue = const Interval(0.0, 750.0 / 1800.0, curve: Cubic(0.2, 0.0, 0.8, 1.0))
+      .transform(300.0 / 1800.0);
+
+    expect(
+      find.byType(LinearProgressIndicator),
+      paints
+        ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 200.0, 4.0, Radius.zero))
+        ..rect(rect: Rect.fromLTRB(0.0, 0.0, animationValue * 200.0, 4.0)),
+    );
+
+    expect(tester.binding.transientCallbackCount, 1);
+  });
+
   testWidgets('LinearProgressIndicator indeterminate (RTL)', (WidgetTester tester) async {
     await tester.pumpWidget(
       Theme(
@@ -236,6 +324,36 @@ void main() {
         ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 200.0, 4.0, const Radius.circular(2.0)))
         // Active indicator.
         ..rrect(rrect: RRect.fromLTRBR(200.0 - animationValue * 200.0, 0.0, 200.0, 4.0, const Radius.circular(2.0))),
+    );
+
+    expect(tester.binding.transientCallbackCount, 1);
+  });
+
+  testWidgets('LinearProgressIndicator indeterminate paint (RTL) - year2023', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: theme,
+        child: const Directionality(
+          textDirection: TextDirection.rtl,
+          child: Center(
+            child: SizedBox(
+              width: 200.0,
+              child: LinearProgressIndicator(year2023: true),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 300));
+    final double animationValue = const Interval(0.0, 750.0 / 1800.0, curve: Cubic(0.2, 0.0, 0.8, 1.0))
+      .transform(300.0 / 1800.0);
+
+    expect(
+      find.byType(LinearProgressIndicator),
+      paints
+        ..rrect(rrect: RRect.fromLTRBR(0.0, 0.0, 200.0, 4.0, Radius.zero))
+        ..rect(rect: Rect.fromLTRB(200.0 - animationValue * 200.0, 0.0, 200.0, 4.0)),
     );
 
     expect(tester.binding.transientCallbackCount, 1);

@@ -344,6 +344,11 @@ class LinearProgressIndicator extends ProgressIndicator {
     this.stopIndicatorColor,
     this.stopIndicatorRadius,
     this.trackGap,
+    @Deprecated(
+      'Use ProgressIndicatorTheme to customize the ProgressIndicator appearance. '
+      'This feature was deprecated after v3.26.0-0.1.pre.'
+    )
+    this.year2023 = false,
   }) : assert(minHeight == null || minHeight > 0);
 
   /// {@template flutter.material.LinearProgressIndicator.trackColor}
@@ -403,6 +408,18 @@ class LinearProgressIndicator extends ProgressIndicator {
   /// If that is null, then defaults to 4.
   final double? trackGap;
 
+  /// When true, the [LinearProgressIndicator] will use the 2023 Material 3 Design appearance.
+  ///
+  /// If false, the [LinearProgressIndicator] will use the latest Material 3 Design appearance,
+  /// which was introduced in December 2023.
+  ///
+  /// If [ThemeData.useMaterial3] is false, then this property is ignored.
+  @Deprecated(
+    'Use ProgressIndicatorTheme to customize the ProgressIndicator appearance. '
+    'This feature was deprecated after v3.26.0-0.1.pre.'
+  )
+  final bool year2023;
+
   @override
   State<LinearProgressIndicator> createState() => _LinearProgressIndicatorState();
 }
@@ -439,9 +456,12 @@ class _LinearProgressIndicatorState extends State<LinearProgressIndicator> with 
   }
 
   Widget _buildIndicator(BuildContext context, double animationValue, TextDirection textDirection) {
-    final ProgressIndicatorThemeData defaults = Theme.of(context).useMaterial3
-      ? _LinearProgressIndicatorDefaultsM3(context)
-      : _LinearProgressIndicatorDefaultsM2(context);
+    final ProgressIndicatorThemeData defaults = switch (Theme.of(context).useMaterial3) {
+      true => widget.year2023
+        ? _LinearProgressIndicatorDefaultsM3Year2023(context)
+        : _LinearProgressIndicatorDefaultsM3(context),
+      false => _LinearProgressIndicatorDefaultsM2(context),
+    };
 
     final ProgressIndicatorThemeData indicatorTheme = ProgressIndicatorTheme.of(context);
     final Color trackColor = widget.backgroundColor ??
@@ -1157,6 +1177,25 @@ class _LinearProgressIndicatorDefaultsM2 extends ProgressIndicatorThemeData {
 
   @override
   Color get linearTrackColor => _colors.background;
+
+  @override
+  double get linearMinHeight => 4.0;
+
+  @override
+  BorderRadius get borderRadius => BorderRadius.zero;
+}
+
+class _LinearProgressIndicatorDefaultsM3Year2023 extends ProgressIndicatorThemeData {
+  _LinearProgressIndicatorDefaultsM3Year2023(this.context);
+
+  final BuildContext context;
+  late final ColorScheme _colors = Theme.of(context).colorScheme;
+
+  @override
+  Color get color => _colors.primary;
+
+  @override
+  Color get linearTrackColor => _colors.secondaryContainer;
 
   @override
   double get linearMinHeight => 4.0;
