@@ -5762,34 +5762,50 @@ class _Scribe extends StatefulWidget {
 }
 
 class _ScribeState extends State<_Scribe> implements ScribeClient {
-  final GlobalKey _key = GlobalKey();
-
   // The handwriting bounds padding of EditText in Android API 34.
   static const EdgeInsets _handwritingPadding = EdgeInsets.symmetric(
     horizontal: 10.0,
     vertical: 40.0,
   );
 
-  RenderEditable get _renderEditable => widget.editableKey.currentContext!.findRenderObject()! as RenderEditable;
+  /// Returns a new Rect whose size has changed by the given padding while
+  /// remaining centered.
+  static Rect _pad(Rect rect, EdgeInsets padding) {
+    return Rect.fromLTRB(
+      rect.left - padding.horizontal,
+      rect.top - padding.vertical,
+      rect.right + padding.horizontal,
+      rect.bottom + padding.vertical,
+    );
+  }
+
+  /// Given a [Rect] in a [RenderBox]'s local coordinate space, returns that
+  /// [Rect] in global coordinates.
+  static Rect _localToGlobalRect(Rect rect, RenderBox renderBox) {
+    return Rect.fromPoints(
+      renderBox.localToGlobal(rect.topLeft),
+      renderBox.localToGlobal(rect.bottomRight),
+    );
+  }
 
   Future<void> _handlePointerEvent(PointerEvent event) async {
-    print('justin _handlePointerEvent $event');
     if (event is! PointerDownEvent
       || event.kind != ui.PointerDeviceKind.stylus
       || !(await Scribe.isStylusHandwritingAvailable() ?? false)) {
       return;
     }
-    print('justin _handlePointerEvent did it hit? ${event.localPosition}');
 
-    // TODO(justinmc): This hittesting doesn't work. Key is the wrong thing?
     final RenderBox renderBox = widget.editableKey.currentContext!.findRenderObject()! as RenderBox;
-    if (!renderBox.hitTest(BoxHitTestResult(), position: event.localPosition)) {
+    final Rect renderBoxRect = _localToGlobalRect(renderBox.paintBounds, renderBox);
+    final Rect hitRect = _pad(renderBoxRect, _handwritingPadding);
+    if (!hitRect.contains(event.position)) {
       return;
     }
-    print('justin _handlePionterEvent hit!');
 
     if (!widget.focusNode.hasFocus) {
       // TODO(justinmc): But don't show the keyboard!
+      // Also, there's still some general bugginess, though it's much better
+      // with the padded hit testing.
       widget.focusNode.requestFocus();
     }
 
@@ -5800,13 +5816,13 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   void initState() {
     super.initState();
     Scribe.registerScribeClient(this);
-    //GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
   }
 
   @override
   void dispose() {
     Scribe.unregisterScribeClient(this);
-    //GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
     super.dispose();
   }
 
@@ -5825,38 +5841,9 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
 
   // End ScribeClient.
 
-  void _handlePanDown(DragDownDetails details) {
-  }
-
-  Future<void> _handlePointerDown(PointerDownEvent event) async {
-    if (event.kind != ui.PointerDeviceKind.stylus) {
-      return;
-    }
-
-    if (!(await Scribe.isStylusHandwritingAvailable() ?? false)) {
-      return;
-    }
-
-    if (!widget.focusNode.hasFocus) {
-      // TODO(justinmc): But don't show the keyboard!
-      widget.focusNode.requestFocus();
-    }
-
-    return Scribe.startStylusHandwriting();
-  }
-
   @override
   Widget build(BuildContext context) {
-    /*
-    return KeyedSubtree(
-      key: _key,
-      child: widget.child,
-    );
-    */
-    return Listener(
-      onPointerDown: _handlePointerDown,
-      child: widget.child,
-    );
+    return widget.child;
   }
 }
 
