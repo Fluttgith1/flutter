@@ -4,6 +4,7 @@
 
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -2325,7 +2326,7 @@ void main() {
 
     Finder textFieldFinder = find.byType(TextField);
     TextField textField = tester.widget<TextField>(textFieldFinder);
-    expect(textField.canRequestFocus, true);
+    expect(textField.canRequestFocus, false);
 
     final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.mouse, pointer: 1);
     await gesture.moveTo(tester.getCenter(textFieldFinder));
@@ -3463,6 +3464,81 @@ void main() {
     textFieldPosition = tester.getTopLeft(find.byType(TextField));
     expect(textFieldPosition, equals(const Offset(16.0, 544.0)));
   });
+
+  // Regression test for https://github.com/flutter/flutter/issues/143505.
+  testWidgets('When using the keyboard, ensure that the focus is on the DropdownMenu', (WidgetTester tester) async {
+    final FocusNode focusNode = FocusNode();
+    addTearDown(focusNode.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: Center(
+            child: DropdownMenu<TestMenu>(
+              focusNode: focusNode,
+              dropdownMenuEntries: menuChildren,
+            ),
+          ),
+        ),
+      ),
+    );
+    for (int i = 0; i < 3; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
+
+    // Now the focus is on the icon button.
+    final Element iconButton = tester.firstElement(find.byIcon(Icons.arrow_drop_down));
+    expect(Focus.of(iconButton).hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    final Element editableText = tester.firstElement(find.byType(EditableText));
+    expect(Focus.of(editableText).hasFocus, isTrue);
+  }, variant: TargetPlatformVariant.all());
+
+  // Regression test for https://github.com/flutter/flutter/issues/143505.
+  testWidgets('Using the keyboard and without setting the FocusNode parameter, ensure that the focus is on the DropdownMenu',
+  (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: Center(
+            child: DropdownMenu<TestMenu>(
+              dropdownMenuEntries: menuChildren,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // If there is no `FocusNode`, by default, `TextField` can receive focus
+    // on desktop platforms, but not on mobile platforms. Therefore, on desktop
+    // platforms, it takes 3 tabs to reach the icon button.
+    final int tabCount = switch (defaultTargetPlatform) {
+      TargetPlatform.iOS || TargetPlatform.android || TargetPlatform.fuchsia => 2,
+      TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.windows => 3,
+    };
+    for (int i = 0; i < tabCount; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
+
+    // Now the focus is on the icon button.
+    final Element iconButton = tester.firstElement(find.byIcon(Icons.arrow_drop_down));
+    expect(Focus.of(iconButton).hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+
+    final Element editableText = tester.firstElement(find.byType(EditableText));
+    expect(Focus.of(editableText).hasFocus, isTrue);
+  }, variant: TargetPlatformVariant.all());
 }
 
 enum TestMenu {

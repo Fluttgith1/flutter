@@ -490,6 +490,9 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
   double? leadingPadding;
   bool _menuHasEnabledItem = false;
   TextEditingController? _localTextEditingController;
+  FocusNode? _focusNode;
+  FocusNode get _effectiveFocudeNode =>
+    widget.focusNode ?? (_focusNode ??= FocusNode(canRequestFocus: _internalFocusNodeCanRequestFocus()));
 
   TextEditingValue get _initialTextEditingValue {
     for (final DropdownMenuEntry<T> entry in filteredEntries) {
@@ -526,6 +529,7 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
       _localTextEditingController?.dispose();
       _localTextEditingController = null;
     }
+    _focusNode?.dispose();
     super.dispose();
   }
 
@@ -568,14 +572,11 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
     if (oldWidget.initialSelection != widget.initialSelection) {
       _localTextEditingController?.value = _initialTextEditingValue;
     }
+    _focusNode?.canRequestFocus = _internalFocusNodeCanRequestFocus();
   }
 
   bool canRequestFocus() {
-    return widget.focusNode?.canRequestFocus ?? widget.requestFocusOnTap
-      ?? switch (Theme.of(context).platform) {
-        TargetPlatform.iOS || TargetPlatform.android || TargetPlatform.fuchsia => false,
-        TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.windows => true,
-      };
+    return _effectiveFocudeNode.canRequestFocus;
   }
 
   void refreshLeadingPadding() {
@@ -612,6 +613,14 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
     return entries
       .where((DropdownMenuEntry<T> entry) => entry.label.toLowerCase().contains(filterText))
       .toList();
+  }
+
+  bool _internalFocusNodeCanRequestFocus() {
+    return widget.requestFocusOnTap
+      ?? switch (Theme.of(context).platform) {
+        TargetPlatform.iOS || TargetPlatform.android || TargetPlatform.fuchsia => false,
+        TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.windows => true,
+      };
   }
 
   bool _shouldUpdateCurrentHighlight(List<DropdownMenuEntry<T>> entries) {
@@ -791,6 +800,7 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
         _enableFilter = false;
       }
       controller.open();
+      _effectiveFocudeNode.requestFocus();
     }
     setState(() {});
   }
@@ -879,7 +889,7 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
           key: _anchorKey,
           enabled: widget.enabled,
           mouseCursor: effectiveMouseCursor,
-          focusNode: widget.focusNode,
+          focusNode: _effectiveFocudeNode,
           canRequestFocus: canRequestFocus(),
           enableInteractiveSelection: canRequestFocus(),
           readOnly: !canRequestFocus(),
