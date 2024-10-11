@@ -294,6 +294,7 @@ abstract final class SystemChannels {
   ///  [Scribble](https://support.apple.com/guide/ipad/enter-text-with-scribble-ipad355ab2a7/ipados).
   static const MethodChannel scribe = OptionalMethodChannel(
       'flutter/scribe',
+      JSONMethodCodec(),
   );
 
   /// A [MethodChannel] for handling spell check for text input.
