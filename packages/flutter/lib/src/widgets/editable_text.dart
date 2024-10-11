@@ -5309,6 +5309,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
                               _openInputConnection();
                               _updateSelectionRects(force: true);
                             },
+                            selectionControls: widget.selectionControls,
                             child: SizeChangedLayoutNotifier(
                               child: _Editable(
                                 key: _editableKey,
@@ -5751,11 +5752,13 @@ class _Scribe extends StatefulWidget {
     required this.child,
     required this.editableKey,
     required this.focusNode,
+    required this.selectionControls,
   });
 
   final Widget child;
   final GlobalKey editableKey;
   final FocusNode focusNode;
+  final TextSelectionControls? selectionControls;
 
   @override
   State<_Scribe> createState() => _ScribeState();
@@ -5788,6 +5791,33 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     );
   }
 
+  // TODO(justinmc): You need to share this logic with text_selection.dart.
+  Rect? _getHandleRect(TextSelectionHandleType type) {
+    if (widget.selectionControls == null) {
+      return null;
+    }
+
+    final Offset handleAnchor = widget.selectionControls!.getHandleAnchor(
+      type,
+      _renderEditable.preferredLineHeight,
+    );
+    final Size handleSize = widget.selectionControls!.getHandleSize(
+      _renderEditable.preferredLineHeight,
+    );
+
+    final Rect handleRect = Rect.fromLTWH(
+      -handleAnchor.dx,
+      -handleAnchor.dy,
+      handleSize.width,
+      handleSize.height,
+    );
+    return handleRect.expandToInclude(
+      Rect.fromCircle(center: handleRect.center, radius: kMinInteractiveDimension / 2),
+    );
+  }
+
+  RenderEditable get _renderEditable => widget.editableKey.currentContext!.findRenderObject()! as RenderEditable;
+
   Future<void> _handlePointerEvent(PointerEvent event) async {
     if (event is! PointerDownEvent
       || event.kind != ui.PointerDeviceKind.stylus
@@ -5796,6 +5826,37 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     }
 
     final RenderBox renderBox = widget.editableKey.currentContext!.findRenderObject()! as RenderBox;
+
+    // TODO(justinmc): This also allows tapping and dragging on the cursor when
+    // no handles are visible. Use something like
+    // _selectionOverlay.handlesVisible? Or does the start handle rect give
+    // itself away when it's collapsed?
+
+    // A stylus event that starts on a selection handle does not start
+    // handwriting, it moves the handle.
+    final Offset? startHandleOffset = _renderEditable.startHandleLayerLink.leader?.offset;
+    if (startHandleOffset != null) {
+      final Rect? leftHandleRectLocal = _getHandleRect(TextSelectionHandleType.left);
+      if (leftHandleRectLocal != null && !leftHandleRectLocal.isEmpty) {
+        final Rect leftHandleRectGlobal = _localToGlobalRect(leftHandleRectLocal, renderBox);
+        final Rect leftHandleRect = leftHandleRectGlobal.shift(startHandleOffset);
+        if (leftHandleRect.contains(event.position)) {
+          return;
+        }
+      }
+    }
+    final Offset? endHandleOffset = _renderEditable.endHandleLayerLink.leader?.offset;
+    if (endHandleOffset != null) {
+      final Rect? rightHandleRectLocal = _getHandleRect(TextSelectionHandleType.right);
+      if (rightHandleRectLocal != null && !rightHandleRectLocal.isEmpty) {
+        final Rect rightHandleRectGlobal = _localToGlobalRect(rightHandleRectLocal, renderBox);
+        final Rect rightHandleRect = rightHandleRectGlobal.shift(endHandleOffset);
+        if (rightHandleRect.contains(event.position)) {
+          return;
+        }
+      }
+    }
+
     final Rect renderBoxRect = _localToGlobalRect(renderBox.paintBounds, renderBox);
     final Rect hitRect = _pad(renderBoxRect, _handwritingPadding);
     if (!hitRect.contains(event.position)) {
@@ -5803,9 +5864,6 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     }
 
     if (!widget.focusNode.hasFocus) {
-      // TODO(justinmc): But don't show the keyboard!
-      // Also, there's still some general bugginess, though it's much better
-      // with the padded hit testing.
       widget.focusNode.requestFocus();
     }
 
@@ -5816,6 +5874,8 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   void initState() {
     super.initState();
     Scribe.registerScribeClient(this);
+    // TODO(justinmc): Make sure you don't add this if stylus handwriting is not
+    // possible (read only, disabled, anything else?).
     GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
   }
 
@@ -5854,6 +5914,7 @@ class _StylusHandwriting extends StatelessWidget {
     required this.enabled,
     required this.focusNode,
     required this.updateSelectionRects,
+    required this.selectionControls,
   });
 
   final Widget child;
@@ -5861,6 +5922,7 @@ class _StylusHandwriting extends StatelessWidget {
   final bool enabled;
   final FocusNode focusNode;
   final VoidCallback updateSelectionRects;
+  final TextSelectionControls? selectionControls;
 
   @override
   Widget build(BuildContext context) {
@@ -5876,6 +5938,7 @@ class _StylusHandwriting extends StatelessWidget {
       child: _Scribe(
         focusNode: focusNode,
         editableKey: editableKey,
+        selectionControls: selectionControls,
         child: child,
       ),
     );
