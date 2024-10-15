@@ -5819,11 +5819,6 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
 
     final RenderBox renderBox = widget.editableKey.currentContext!.findRenderObject()! as RenderBox;
 
-    // TODO(justinmc): This also allows tapping and dragging on the cursor when
-    // no handles are visible. Use something like
-    // _selectionOverlay.handlesVisible? Or does the start handle rect give
-    // itself away when it's collapsed?
-
     // A stylus event that starts on a selection handle does not start
     // handwriting, it moves the handle.
     final Offset? startHandleOffset = _renderEditable.startHandleLayerLink.leader?.offset;
