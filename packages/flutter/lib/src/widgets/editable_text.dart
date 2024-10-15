@@ -1736,6 +1736,14 @@ class EditableText extends StatefulWidget {
   ///  * iPads running iOS 14 and above using an Apple Pencil.
   ///  * Android devices running API 34 and above and using an active stylus.
   /// {@endtemplate}
+  ///
+  /// See also:
+  ///
+  ///   * [ScribbleClient], which can be mixed into an arbirtrary widget to
+  ///     provide iOS Scribble functionality.
+  ///   * [ScribeClient], which can be mixed into an arbitrary widget to provide
+  ///     Android Scribe functionality.
+  ///   * [Scribe], which can be used to interact with Android Scribe directly.
   final bool stylusHandwritingEnabled;
 
   /// {@template flutter.widgets.editableText.selectionEnabled}
