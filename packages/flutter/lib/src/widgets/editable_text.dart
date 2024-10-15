@@ -5753,18 +5753,18 @@ class _ScribbleFocusableState extends State<_ScribbleFocusable> implements Scrib
   }
 }
 
-// TODO(justinmc): Some vertical handwriting seems to want to change the
-// selection instead of writing...
 class _Scribe extends StatefulWidget {
   const _Scribe({
     required this.child,
     required this.editableKey,
+    required this.enabled,
     required this.focusNode,
     required this.selectionControls,
   });
 
   final Widget child;
   final GlobalKey editableKey;
+  final bool enabled;
   final FocusNode focusNode;
   final TextSelectionControls? selectionControls;
 
@@ -5863,7 +5863,20 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     Scribe.registerScribeClient(this);
     // TODO(justinmc): Make sure you don't add this if stylus handwriting is not
     // possible (read only, disabled, anything else?).
-    GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
+    if (widget.enabled) {
+      GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Scribe oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.enabled && widget.enabled) {
+      GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
+    }
+    if (oldWidget.enabled && !widget.enabled) {
+      GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
+    }
   }
 
   @override
@@ -5923,6 +5936,7 @@ class _StylusHandwriting extends StatelessWidget {
       enabled: enabled,
       updateSelectionRects: updateSelectionRects,
       child: _Scribe(
+        enabled: enabled,
         focusNode: focusNode,
         editableKey: editableKey,
         selectionControls: selectionControls,
