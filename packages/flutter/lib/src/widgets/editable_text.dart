@@ -5791,29 +5791,13 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     );
   }
 
-  // TODO(justinmc): You need to share this logic with text_selection.dart.
   Rect? _getHandleRect(TextSelectionHandleType type) {
     if (widget.selectionControls == null) {
       return null;
     }
-
-    final Offset handleAnchor = widget.selectionControls!.getHandleAnchor(
-      type,
-      _renderEditable.preferredLineHeight,
-    );
-    final Size handleSize = widget.selectionControls!.getHandleSize(
-      _renderEditable.preferredLineHeight,
-    );
-
-    final Rect handleRect = Rect.fromLTWH(
-      -handleAnchor.dx,
-      -handleAnchor.dy,
-      handleSize.width,
-      handleSize.height,
-    );
-    return handleRect.expandToInclude(
-      Rect.fromCircle(center: handleRect.center, radius: kMinInteractiveDimension / 2),
-    );
+    // Do not expand the Rect to kMinInteractiveDimension because it will
+    // targeted by a precise pointing device.
+    return widget.selectionControls!.getHandleRect(type, _renderEditable.preferredLineHeight);
   }
 
   RenderEditable get _renderEditable => widget.editableKey.currentContext!.findRenderObject()! as RenderEditable;

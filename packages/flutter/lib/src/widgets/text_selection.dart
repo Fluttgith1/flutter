@@ -94,6 +94,28 @@ class ToolbarItemsParentData extends ContainerBoxParentData<RenderBox> {
 ///  * [SelectionArea], which selects appropriate text selection controls
 ///    based on the current platform.
 abstract class TextSelectionControls {
+  /// Returns the axis-aligned bounding [Rect] of the text selection handle.
+  ///
+  /// When interacting with a text seletion handle through a touch event, the
+  /// interactive area should be at least [kMinInteractiveDimension] square,
+  /// which this method does not consider.
+  Rect getHandleRect(TextSelectionHandleType type, double preferredLineHeight) {
+    final Offset handleAnchor = getHandleAnchor(
+      type,
+      preferredLineHeight,
+    );
+    final Size handleSize = getHandleSize(
+      preferredLineHeight,
+    );
+
+    return Rect.fromLTWH(
+      -handleAnchor.dx,
+      -handleAnchor.dy,
+      handleSize.width,
+      handleSize.height,
+    );
+  }
+
   /// Builds a selection handle of the given `type`.
   ///
   /// The top left corner of this widget is positioned at the bottom of the
@@ -1885,19 +1907,9 @@ class _SelectionHandleOverlayState extends State<_SelectionHandleOverlay> with S
 
   @override
   Widget build(BuildContext context) {
-    final Offset handleAnchor = widget.selectionControls.getHandleAnchor(
+    final Rect handleRect = widget.selectionControls.getHandleRect(
       widget.type,
       widget.preferredLineHeight,
-    );
-    final Size handleSize = widget.selectionControls.getHandleSize(
-      widget.preferredLineHeight,
-    );
-
-    final Rect handleRect = Rect.fromLTWH(
-      -handleAnchor.dx,
-      -handleAnchor.dy,
-      handleSize.width,
-      handleSize.height,
     );
 
     // Make sure the GestureDetector is big enough to be easily interactive.
