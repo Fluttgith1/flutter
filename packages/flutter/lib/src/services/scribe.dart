@@ -80,20 +80,6 @@ class Scribe {
     );
   }
 
-  static Rect _getSelectionArea(List<dynamic> args, double devicePixelRatio) {
-    final Map<dynamic, dynamic> argsMap = args.first as Map<dynamic, dynamic>;
-    final Map<dynamic, dynamic> selectionAreaMap = argsMap['selectionArea'] as Map<dynamic, dynamic>;
-    final Map<String, double> selectionAreaJson = selectionAreaMap.cast<String, double>();
-    return Rect.fromLTRB(
-      // Flutter uses logical pixels while Android uses physical pixels, so we
-      // need to divide by the devicePixelRatio to convert.
-      selectionAreaJson['left']! / devicePixelRatio,
-      selectionAreaJson['top']! / devicePixelRatio,
-      selectionAreaJson['right']! / devicePixelRatio,
-      selectionAreaJson['bottom']! / devicePixelRatio,
-    );
-  }
-
   /// Registers a [ScribeClient] to receive Scribe input when
   /// [ScribeClient.isActive] is true.
   ///
