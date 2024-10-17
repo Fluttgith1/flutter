@@ -10,6 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'editable_text_utils.dart';
 
+// TODO(justinmc): Convert these copied Scribble tests to Scribe if they're
+// valuable, then make sure everything in EditableText's Scribe functionality is
+// tested.
 void main() {
   const TextStyle textStyle = TextStyle();
   const Color cursorColor = Color.fromARGB(0xFF, 0xFF, 0x00, 0x00);

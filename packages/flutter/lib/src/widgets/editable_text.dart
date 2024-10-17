@@ -5860,9 +5860,6 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   @override
   void initState() {
     super.initState();
-    Scribe.registerScribeClient(this);
-    // TODO(justinmc): Make sure you don't add this if stylus handwriting is not
-    // possible (read only, disabled, anything else?).
     if (widget.enabled) {
       GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
     }
@@ -5881,7 +5878,6 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
 
   @override
   void dispose() {
-    Scribe.unregisterScribeClient(this);
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
     super.dispose();
   }

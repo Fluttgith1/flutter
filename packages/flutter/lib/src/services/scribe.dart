@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 
 import 'message_codec.dart';
@@ -44,8 +42,6 @@ class Scribe {
 
   static const MethodChannel _channel = SystemChannels.scribe;
 
-  final Set<ScribeClient> _scribeClients = <ScribeClient>{};
-
   /// Returns true if the InputMethodManager supports Scribe stylus handwriting
   /// input.
   ///
@@ -78,57 +74,6 @@ class Scribe {
     return _channel.invokeMethod<void>(
       'Scribe.startStylusHandwriting',
     );
-  }
-
-  /// Registers a [ScribeClient] to receive Scribe input when
-  /// [ScribeClient.isActive] is true.
-  ///
-  /// See also:
-  ///
-  ///  * [unregisterScribeClient], which removes a [ScribeClient] that has
-  ///    previously been registered.
-  static void registerScribeClient(ScribeClient scribeClient) {
-    _instance._scribeClients.add(scribeClient);
-    // TODO(justinmc): Support Scribe hover icon by sending the Rect of each
-    // ScribeClient currently on screen to the engine.
-    // https://github.com/flutter/flutter/issues/155948
-  }
-
-  /// Unregisters a [ScribeClient] that has previously been registered to
-  /// receive Scribe input.
-  ///
-  /// See also:
-  ///
-  ///  * [registerScribeClient], which registers a [ScribeClient] to receive
-  ///    Scribe input.
-  static void unregisterScribeClient(ScribeClient scribeClient) {
-    _instance._scribeClients.remove(scribeClient);
-  }
-
-  /// Returns the active registered [ScribeClient] with [ScribeClient.isActive].
-  ///
-  /// There should be a maximum of one active [ScribeClient] at any time.
-  ///
-  /// See also:
-  ///
-  ///  * [ScribeClient.registerScribeClient], which is how [ScribeClient]s
-  ///    become registered.
-  ///  * [ScribeClient.unregisterScribeClient], which is how [ScribeClient]s
-  ///    that have previously been registered are removed.
-  ScribeClient? get activeScribeClient {
-    assert(() {
-      final Iterable<ScribeClient> activeClients = _scribeClients.where((ScribeClient client) {
-        return client.isActive;
-      });
-      return activeClients.length <= 1;
-    }());
-
-    for (final ScribeClient client in _scribeClients) {
-      if (client.isActive) {
-        return client;
-      }
-    }
-    return null;
   }
 
   Future<dynamic> _loudlyHandleScribeInputInvocation(MethodCall call) async {
