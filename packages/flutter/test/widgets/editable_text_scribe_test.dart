@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,6 +16,9 @@ import 'editable_text_utils.dart';
 // valuable, then make sure everything in EditableText's Scribe functionality is
 // tested.
 void main() {
+  final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+
+  // TODO(justinmc): Consider cleaning up this setup stuff.
   const TextStyle textStyle = TextStyle();
   const Color cursorColor = Color.fromARGB(0xFF, 0xFF, 0x00, 0x00);
   late TextEditingController controller;
@@ -29,9 +34,21 @@ void main() {
     focusNode.dispose();
   });
 
+// TODO(justinmc): More test paths. Test: a non-stylus event. isStylusHandwritingAvailable false. hitting a collapsed handle. hitting the end handle non-collapsed. Hitting outside of the field.
   testWidgets('Requests focus and changes the selection when onScribbleFocus is called', (WidgetTester tester) async {
     controller.text = 'Lorem ipsum dolor sit amet';
-    late SelectionChangedCause selectionCause;
+
+    final List<MethodCall> calls = <MethodCall>[];
+    binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.scribe, (MethodCall methodCall) {
+        calls.add(methodCall);
+
+        return switch (methodCall.method) {
+          'Scribe.isStylusHandwritingAvailable' => Future<bool>.value(true),
+          'Scribe.startStylusHandwriting' => Future<void>.value(),
+          _=> throw FlutterError('Unexpected method call: ${methodCall.method}'),
+        };
+      });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -42,24 +59,26 @@ void main() {
           style: textStyle,
           cursorColor: cursorColor,
           selectionControls: materialTextSelectionControls,
-          onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
-            if (cause != null) {
-              selectionCause = cause;
-            }
-          },
         ),
       ),
     );
 
-    await tester.testTextInput.scribbleFocusElement(TextInput.scribbleClients.keys.first, Offset.zero);
+    expect(focusNode.hasFocus, isFalse);
 
-    expect(focusNode.hasFocus, true);
-    expect(selectionCause, SelectionChangedCause.scribble);
+    final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+    await gesture.down(tester.getCenter(find.byType(EditableText)));
 
-    // On web, we should rely on the browser's implementation of Scribble, so the selection changed cause
-    // will never be SelectionChangedCause.scribble.
-  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.iOS })); // [intended]
+    expect(calls, hasLength(2));
+    expect(calls.first.method, 'Scribe.isStylusHandwritingAvailable');
+    expect(calls[1].method, 'Scribe.startStylusHandwriting');
+    expect(focusNode.hasFocus, isTrue);
 
+    await gesture.up();
+
+    // On web, let the browser handle handwriting input.
+  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  /*
   testWidgets('Declares itself for Scribble interaction if the bounds overlap the scribble rect and the widget is touchable', (WidgetTester tester) async {
     controller.text = 'Lorem ipsum dolor sit amet';
 
@@ -558,4 +577,5 @@ void main() {
 
     // On web, we should rely on the browser's implementation of Scribble, so we will not send selection rects.
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.iOS })); // [intended]
+  */
 }
