@@ -42,13 +42,72 @@ class Scribe {
 
   static const MethodChannel _channel = SystemChannels.scribe;
 
+  /// A convenience method to check if the device currently supports Scribe
+  /// stylus handwriting input.
+  ///
+  /// Call this before calling [startStylusHandwriting] to make sure it's
+  /// available.
+  ///
+  /// {@tool snippet}
+  /// This example shows using [isFeatureAvailable] to confirm that
+  /// [startStylusHandwriting] can be called.
+  ///
+  /// ```dart
+  /// if (!(await Scribe.isFeatureAvailable() ?? false)) {
+  ///   // The device doesn't support stylus input right now, or maybe at all.
+  ///   return;
+  /// }
+  ///
+  /// // Scribe is supported, so start it.
+  /// Scribe.startStylusHandwriting();
+  /// ```
+  /// {@end-tool}
+  ///
+  /// See also:
+  ///
+  /// * [isStylusHandwritingAvailable], which is similar, but throws an error
+  ///   when called by an unsupported API level.
+  static Future<bool?> isFeatureAvailable() {
+    return _channel.invokeMethod<bool?>(
+      'Scribe.isFeatureAvailable',
+    );
+  }
+
   /// Returns true if the InputMethodManager supports Scribe stylus handwriting
   /// input.
   ///
   /// Call this before calling [startStylusHandwriting] to make sure it's
   /// available.
   ///
-  /// Supported on Android API 34 and above.
+  /// Supported on Android API 34 and above. If called by an unsupported API
+  /// level, a [PlatformException] will be thrown. To avoid error handling, use
+  /// the convenience method [isFeatureAvailable] instead.
+  ///
+  /// {@tool snippet}
+  /// This example shows using [isStylusHandwritingAvailable] to confirm that
+  /// [startStylusHandwriting] can be called.
+  ///
+  /// ```dart
+  /// try {
+  ///   if (!(await Scribe.isStylusHandwritingAvailable() ?? false)) {
+  ///     // If isStylusHandwritingAvailable returns false then the device's API level
+  ///     // supports Scribe, but for some other reason it's not able to accept stylus
+  ///     // input right now.
+  ///     return;
+  ///   }
+  /// } on PlatformException catch (exception) {
+  ///   if (exception.message == 'Requires API level 34 or higher.') {
+  ///     // The device's API level is too low to support Scribe.
+  ///     return;
+  ///   }
+  ///   // Any other exception is unexpected and should not be caught here.
+  ///   rethrow;
+  /// }
+  ///
+  /// // Scribe is supported, so start it.
+  /// Scribe.startStylusHandwriting();
+  /// ```
+  /// {@end-tool}
   ///
   /// See also:
   ///

@@ -5813,7 +5813,7 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   Future<void> _handlePointerEvent(PointerEvent event) async {
     if (event is! PointerDownEvent
       || event.kind != ui.PointerDeviceKind.stylus
-      || !(await Scribe.isStylusHandwritingAvailable() ?? false)) {
+      || !(await Scribe.isFeatureAvailable() ?? false)) {
       return;
     }
 
