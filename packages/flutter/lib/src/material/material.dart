@@ -81,19 +81,11 @@ const Map<MaterialType, BorderRadius?> kMaterialEdges = <MaterialType, BorderRad
 ///
 /// Typically obtained via [Material.of].
 //
-// TODO(nate-thegrate): deprecate this in the next PR!
-// https://github.com/flutter/flutter/pull/149963
+// TODO(nate-thegrate): deprecate Material-specific symbols once Splash
+// fully replaces them.
+// The Material widget will be refactored to use a SplashBox in its build method.
+// https://flutter.dev/go/layered-material-widgets
 typedef MaterialInkController = SplashController;
-
-/// Allows a [MaterialInkController] to call the [addInkFeature] method.
-///
-/// Will be deprecated once the [Splash] class is implemented.
-extension AddInkFeature on MaterialInkController {
-  /// Add an [InkFeature], such as an [InkSplash] or an [InkHighlight].
-  ///
-  /// The ink feature will paint as part of this controller.
-  void addInkFeature(InkFeature feature) => addSplash(feature);
-}
 
 /// A piece of material.
 ///
@@ -557,8 +549,13 @@ class SplashController extends RenderProxyBox {
   /// to drive their animations.
   final TickerProvider vsync;
 
-  /// (Optionally) specifies the color of the surface on which
+  /// Optionally specifies the color of the surface on which
   /// splashes are being painted.
+  ///
+  /// The splash controller doesn't paint this color—the value is stored here,
+  /// and descendants can access it via `Material.of(context).color`.
+  /// Unlike typical [InheritedWidget] `.of(context)` methods, no updates
+  /// are sent when the color changes.
   ///
   /// If non-null, this [RenderBox] will absorb hit tests.
   /// (The hit test behavior is usually inconsequential, since a splash
@@ -572,6 +569,13 @@ class SplashController extends RenderProxyBox {
   @visibleForTesting
   List<Splash>? get debugSplashes => kDebugMode ? _splashes : null;
   List<Splash>? _splashes;
+
+  /// Add an [InkFeature], such as an [InkSplash] or an [InkHighlight].
+  ///
+  /// The ink feature will paint as part of this controller.
+  // TODO(nate-thegrate): deprecate this method once Splash is officially introduced!
+  // https://flutter.dev/go/layered-material-widgets
+  void addInkFeature(InkFeature feature) => addSplash(feature);
 
   /// Adds a [Splash] to the collection of splashes that this controller paints.
   void addSplash(Splash splash) {
