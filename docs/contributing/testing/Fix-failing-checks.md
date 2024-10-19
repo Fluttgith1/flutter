@@ -14,9 +14,9 @@ The result of this check usually goes back and forth a few times each day,
 for a variety of reasons.
 
 **What to do:** Once [review requirements](../Tree-hygiene.md#getting-a-code-review)
-are met and all other checks are passing, adding the
-[**`autosubmit`**](../../infra/Landing-Changes-With-Autosubmit.md) label
-signals a bot to merge the PR once the tree-status check succeeds.
+are met and all other checks are passing, a reviewer will add the
+[**`autosubmit`**](../../infra/Landing-Changes-With-Autosubmit.md) label,
+and then a bot will merge the PR once the tree-status check succeeds.
 
 <br>
 
