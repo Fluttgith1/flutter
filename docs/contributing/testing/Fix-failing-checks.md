@@ -31,7 +31,7 @@ for more info).
 Google employees can view the test output and give feedback accordingly.
 
 **What to do:** If 2 weeks have gone by and nobody's looked into it,
-feel free to [reach out on Discord](../../Chat.md).
+feel free to [reach out on Discord](../Chat.md).
 
 <br>
 
