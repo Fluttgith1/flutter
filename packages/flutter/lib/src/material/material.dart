@@ -84,7 +84,7 @@ const Map<MaterialType, BorderRadius?> kMaterialEdges = <MaterialType, BorderRad
 // TODO(nate-thegrate): deprecate Material-specific symbols once Splash
 // fully replaces them.
 // The Material widget will be refactored to use a SplashBox in its build method.
-// https://flutter.dev/go/layered-material-widgets
+// https://github.com/flutter/flutter/issues/150139
 typedef MaterialInkController = SplashController;
 
 /// A piece of material.
@@ -574,7 +574,7 @@ class SplashController extends RenderProxyBox {
   ///
   /// The ink feature will paint as part of this controller.
   // TODO(nate-thegrate): deprecate this method once Splash is officially introduced!
-  // https://flutter.dev/go/layered-material-widgets
+  // https://github.com/flutter/flutter/issues/150139
   void addInkFeature(InkFeature feature) => addSplash(feature);
 
   /// Adds a [Splash] to the collection of splashes that this controller paints.
