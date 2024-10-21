@@ -43,6 +43,20 @@ void main() {
     expect(calls.first.method, 'Scribe.isStylusHandwritingAvailable');
   });
 
+  test('Scribe.isFeatureAvailable calls through to platform channel', () async {
+    final List<MethodCall> calls = <MethodCall>[];
+    binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.scribe, (MethodCall methodCall) {
+        calls.add(methodCall);
+        return Future<void>.value();
+      });
+
+    await Scribe.isFeatureAvailable();
+
+    expect(calls, hasLength(1));
+    expect(calls.first.method, 'Scribe.isFeatureAvailable');
+  });
+
   test('Scribe.startStylusHandwriting calls through to platform channel', () async {
     final List<MethodCall> calls = <MethodCall>[];
     binding.defaultBinaryMessenger
