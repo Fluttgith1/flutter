@@ -107,8 +107,6 @@ void main() {
     expect(calls.first.method, 'Scribe.isFeatureAvailable');
 
     await gesture.up();
-
-    // On web, let the browser handle handwriting input.
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
 
   testWidgets('tap down event must be from a stylus in order to start handwriting', (WidgetTester tester) async {
@@ -135,8 +133,6 @@ void main() {
     expect(calls, isEmpty);
 
     await gesture.up();
-
-    // On web, let the browser handle handwriting input.
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
 
   testWidgets('tap down event on a selection handle is handled by the handle and does not start handwriting', (WidgetTester tester) async {
@@ -184,11 +180,132 @@ void main() {
     expect(calls, hasLength(1));
 
     await gesture.up();
-
-    // On web, let the browser handle handwriting input.
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
 
-  // TODO(justinmc): Test that you can start handwriting in the padding outside of the field.
+  group('handwriting padding', () {
+    const EdgeInsets handwritingPadding = EdgeInsets.symmetric(
+      horizontal: 10.0,
+      vertical: 40.0,
+    );
+
+    testWidgets('can start handwriting in the padded area outside of the field (vertical)', (WidgetTester tester) async {
+      isFeatureAvailableReturnValue = true;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EditableText(
+            controller: controller,
+            backgroundCursorColor: Colors.grey,
+            focusNode: focusNode,
+            style: textStyle,
+            cursorColor: cursorColor,
+            selectionControls: materialTextSelectionControls,
+          ),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+      final Offset editableTextBottomLeft = tester.getBottomLeft(find.byType(EditableText));
+      await gesture.down(editableTextBottomLeft + Offset(0.0, handwritingPadding.bottom - 1.0));
+
+      expect(calls, hasLength(2));
+      expect(calls.first.method, 'Scribe.isFeatureAvailable');
+      expect(calls[1].method, 'Scribe.startStylusHandwriting');
+      expect(focusNode.hasFocus, isTrue);
+
+      await gesture.up();
+    }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+    testWidgets('cannot start handwriting just outside the padded area (vertical)', (WidgetTester tester) async {
+      isFeatureAvailableReturnValue = true;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EditableText(
+            controller: controller,
+            backgroundCursorColor: Colors.grey,
+            focusNode: focusNode,
+            style: textStyle,
+            cursorColor: cursorColor,
+            selectionControls: materialTextSelectionControls,
+          ),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+      final Offset editableTextBottomLeft = tester.getBottomLeft(find.byType(EditableText));
+      await gesture.down(editableTextBottomLeft + Offset(0.0, handwritingPadding.bottom));
+
+      expect(calls, hasLength(1));
+      expect(calls.first.method, 'Scribe.isFeatureAvailable');
+      expect(focusNode.hasFocus, isFalse);
+
+      await gesture.up();
+    }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+    testWidgets('can start handwriting in the padded area outside of the field (horizontal)', (WidgetTester tester) async {
+      isFeatureAvailableReturnValue = true;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EditableText(
+            controller: controller,
+            backgroundCursorColor: Colors.grey,
+            focusNode: focusNode,
+            style: textStyle,
+            cursorColor: cursorColor,
+            selectionControls: materialTextSelectionControls,
+          ),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+      final Offset editableTextTopRight = tester.getTopRight(find.byType(EditableText));
+      await gesture.down(editableTextTopRight + Offset(handwritingPadding.right - 1.0, 0.0));
+
+      expect(calls, hasLength(2));
+      expect(calls.first.method, 'Scribe.isFeatureAvailable');
+      expect(calls[1].method, 'Scribe.startStylusHandwriting');
+      expect(focusNode.hasFocus, isTrue);
+
+      await gesture.up();
+    }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+    testWidgets('cannot start handwriting just outside the padded area (horizontal)', (WidgetTester tester) async {
+      isFeatureAvailableReturnValue = true;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EditableText(
+            controller: controller,
+            backgroundCursorColor: Colors.grey,
+            focusNode: focusNode,
+            style: textStyle,
+            cursorColor: cursorColor,
+            selectionControls: materialTextSelectionControls,
+          ),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+      final Offset editableTextTopRight = tester.getTopRight(find.byType(EditableText));
+      await gesture.down(editableTextTopRight + Offset(handwritingPadding.right, 0.0));
+
+      expect(calls, hasLength(1));
+      expect(calls.first.method, 'Scribe.isFeatureAvailable');
+      expect(focusNode.hasFocus, isFalse);
+
+      await gesture.up();
+    }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+  });
 
   /*
   testWidgets('Declares itself for Scribble interaction if the bounds overlap the scribble rect and the widget is touchable', (WidgetTester tester) async {

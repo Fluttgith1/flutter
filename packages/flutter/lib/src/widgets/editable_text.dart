@@ -5785,10 +5785,10 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
   /// remaining centered.
   static Rect _pad(Rect rect, EdgeInsets padding) {
     return Rect.fromLTRB(
-      rect.left - padding.horizontal,
-      rect.top - padding.vertical,
-      rect.right + padding.horizontal,
-      rect.bottom + padding.vertical,
+      rect.left - padding.left,
+      rect.top - padding.top,
+      rect.right + padding.right,
+      rect.bottom + padding.bottom,
     );
   }
 
