@@ -21,34 +21,38 @@ void main() {
   // TODO(justinmc): Consider cleaning up this setup stuff.
   const TextStyle textStyle = TextStyle();
   const Color cursorColor = Color.fromARGB(0xFF, 0xFF, 0x00, 0x00);
+  final List<MethodCall> calls = <MethodCall>[];
+  bool isFeatureAvailableReturnValue = true;
   late TextEditingController controller;
   late FocusNode focusNode;
 
   setUp(() async {
-    controller = TextEditingController();
+    binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.scribe, (MethodCall methodCall) {
+        calls.add(methodCall);
+
+        return switch (methodCall.method) {
+          'Scribe.isFeatureAvailable' => Future<bool>.value(isFeatureAvailableReturnValue),
+          'Scribe.startStylusHandwriting' => Future<void>.value(),
+          _=> throw FlutterError('Unexpected method call: ${methodCall.method}'),
+        };
+      });
+
+    controller = TextEditingController(
+      text: 'Lorem ipsum dolor sit amet',
+    );
     focusNode = FocusNode(debugLabel: 'EditableText Node');
   });
 
   tearDown(() {
     controller.dispose();
     focusNode.dispose();
+    calls.clear();
   });
 
-// TODO(justinmc): More test paths. Test: a non-stylus event. isStylusHandwritingAvailable false. hitting a collapsed handle. hitting the end handle non-collapsed. Hitting outside of the field.
-  testWidgets('Requests focus and changes the selection when onScribbleFocus is called', (WidgetTester tester) async {
-    controller.text = 'Lorem ipsum dolor sit amet';
-
-    final List<MethodCall> calls = <MethodCall>[];
-    binding.defaultBinaryMessenger
-      .setMockMethodCallHandler(SystemChannels.scribe, (MethodCall methodCall) {
-        calls.add(methodCall);
-
-        return switch (methodCall.method) {
-          'Scribe.isStylusHandwritingAvailable' => Future<bool>.value(true),
-          'Scribe.startStylusHandwriting' => Future<void>.value(),
-          _=> throw FlutterError('Unexpected method call: ${methodCall.method}'),
-        };
-      });
+  // TODO(justinmc): More test paths. Test: a non-stylus event. isStylusHandwritingAvailable false. hitting a collapsed handle. hitting the end handle non-collapsed. Hitting outside of the field.
+  testWidgets('when Scribe is available, starts handwriting on tap down', (WidgetTester tester) async {
+    isFeatureAvailableReturnValue = true;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -69,7 +73,7 @@ void main() {
     await gesture.down(tester.getCenter(find.byType(EditableText)));
 
     expect(calls, hasLength(2));
-    expect(calls.first.method, 'Scribe.isStylusHandwritingAvailable');
+    expect(calls.first.method, 'Scribe.isFeatureAvailable');
     expect(calls[1].method, 'Scribe.startStylusHandwriting');
     expect(focusNode.hasFocus, isTrue);
 
@@ -77,6 +81,114 @@ void main() {
 
     // On web, let the browser handle handwriting input.
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  testWidgets('when Scribe is unavailable, does not start handwriting on tap down', (WidgetTester tester) async {
+    isFeatureAvailableReturnValue = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EditableText(
+          controller: controller,
+          backgroundCursorColor: Colors.grey,
+          focusNode: focusNode,
+          style: textStyle,
+          cursorColor: cursorColor,
+          selectionControls: materialTextSelectionControls,
+        ),
+      ),
+    );
+
+    expect(focusNode.hasFocus, isFalse);
+
+    final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+    await gesture.down(tester.getCenter(find.byType(EditableText)));
+
+    expect(calls, hasLength(1));
+    expect(calls.first.method, 'Scribe.isFeatureAvailable');
+
+    await gesture.up();
+
+    // On web, let the browser handle handwriting input.
+  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  testWidgets('tap down event must be from a stylus in order to start handwriting', (WidgetTester tester) async {
+    isFeatureAvailableReturnValue = true;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EditableText(
+          controller: controller,
+          backgroundCursorColor: Colors.grey,
+          focusNode: focusNode,
+          style: textStyle,
+          cursorColor: cursorColor,
+          selectionControls: materialTextSelectionControls,
+        ),
+      ),
+    );
+
+    expect(focusNode.hasFocus, isFalse);
+
+    final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.mouse, pointer: 1);
+    await gesture.down(tester.getCenter(find.byType(EditableText)));
+
+    expect(calls, isEmpty);
+
+    await gesture.up();
+
+    // On web, let the browser handle handwriting input.
+  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  testWidgets('tap down event on a selection handle is handled by the handle and does not start handwriting', (WidgetTester tester) async {
+    isFeatureAvailableReturnValue = true;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EditableText(
+          controller: controller,
+          backgroundCursorColor: Colors.grey,
+          focusNode: focusNode,
+          style: textStyle,
+          cursorColor: cursorColor,
+          selectionControls: materialTextSelectionControls,
+          showSelectionHandles: true,
+        ),
+      ),
+    );
+
+    expect(focusNode.hasFocus, isFalse);
+    expect(find.byType(CompositedTransformFollower), findsNothing);
+
+    // Tap to show the collapsed selection handle.
+    final Offset fieldOffset = tester.getTopLeft(find.byType(EditableText));
+    await tester.tapAt(fieldOffset + const Offset(20.0, 10.0));
+    await tester.pump();
+    expect(find.byType(CompositedTransformFollower), findsOneWidget);
+
+    final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+    final Finder handleFinder = find.descendant(
+      of: find.byType(CompositedTransformFollower),
+      matching: find.byType(CustomPaint),
+    );
+    await gesture.down(tester.getCenter(handleFinder));
+
+    expect(calls, hasLength(1));
+    expect(calls.first.method, 'Scribe.isFeatureAvailable');
+    expect(controller.selection.isCollapsed, isTrue);
+    final int cursorStart = controller.selection.start;
+
+    // Dragging on top of the handle moves it like normal.
+    await gesture.moveBy(const Offset(20.0, 0.0));
+    expect(controller.selection.isCollapsed, isTrue);
+    expect(controller.selection.start, greaterThan(cursorStart));
+    expect(calls, hasLength(1));
+
+    await gesture.up();
+
+    // On web, let the browser handle handwriting input.
+  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  // TODO(justinmc): Test that you can start handwriting in the padding outside of the field.
 
   /*
   testWidgets('Declares itself for Scribble interaction if the bounds overlap the scribble rect and the widget is touchable', (WidgetTester tester) async {

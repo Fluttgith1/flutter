@@ -94,23 +94,19 @@ class ToolbarItemsParentData extends ContainerBoxParentData<RenderBox> {
 ///  * [SelectionArea], which selects appropriate text selection controls
 ///    based on the current platform.
 abstract class TextSelectionControls {
-  /// Returns the axis-aligned bounding [Rect] of the text selection handle.
+  /// Returns the bounding [Rect] of the text selection handle in local
+  /// coordinates.
   ///
   /// When interacting with a text seletion handle through a touch event, the
   /// interactive area should be at least [kMinInteractiveDimension] square,
   /// which this method does not consider.
   Rect getHandleRect(TextSelectionHandleType type, double preferredLineHeight) {
-    final Offset handleAnchor = getHandleAnchor(
-      type,
-      preferredLineHeight,
-    );
     final Size handleSize = getHandleSize(
       preferredLineHeight,
     );
-
     return Rect.fromLTWH(
-      -handleAnchor.dx,
-      -handleAnchor.dy,
+      0.0,
+      0.0,
       handleSize.width,
       handleSize.height,
     );
