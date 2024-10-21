@@ -1896,6 +1896,10 @@ class _SelectionHandleOverlayState extends State<_SelectionHandleOverlay> with S
       widget.type,
       widget.preferredLineHeight,
     );
+    final Offset handleAnchor = widget.selectionControls.getHandleAnchor(
+      widget.type,
+      widget.preferredLineHeight,
+    );
 
     // Make sure the GestureDetector is big enough to be easily interactive.
     final Rect interactiveRect = handleRect.expandToInclude(
@@ -1915,7 +1919,8 @@ class _SelectionHandleOverlayState extends State<_SelectionHandleOverlay> with S
 
     return CompositedTransformFollower(
       link: widget.handleLayerLink,
-      offset: interactiveRect.topLeft,
+      // TODO(justinmc): Without an offset, this is putting the top left corner of the interactiveRect at the place where the handle should be pointing. Fix it!
+      //offset: handleAnchor,
       showWhenUnlinked: false,
       child: FadeTransition(
         opacity: _opacity,
