@@ -50,7 +50,6 @@ void main() {
     calls.clear();
   });
 
-  // TODO(justinmc): More test paths. Test: a non-stylus event. isStylusHandwritingAvailable false. hitting a collapsed handle. hitting the end handle non-collapsed. Hitting outside of the field.
   testWidgets('when Scribe is available, starts handwriting on tap down', (WidgetTester tester) async {
     isFeatureAvailableReturnValue = true;
 
@@ -135,7 +134,7 @@ void main() {
     await gesture.up();
   }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
 
-  testWidgets('tap down event on a selection handle is handled by the handle and does not start handwriting', (WidgetTester tester) async {
+  testWidgets('tap down event on a collapsed selection handle is handled by the handle and does not start handwriting', (WidgetTester tester) async {
     isFeatureAvailableReturnValue = true;
 
     await tester.pumpWidget(
@@ -177,6 +176,54 @@ void main() {
     await gesture.moveBy(const Offset(20.0, 0.0));
     expect(controller.selection.isCollapsed, isTrue);
     expect(controller.selection.start, greaterThan(cursorStart));
+    expect(calls, hasLength(1));
+
+    await gesture.up();
+  }, skip: kIsWeb, variant: const TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.android })); // [intended]
+
+  testWidgets('tap down event on the end selection handle is handled by the handle and does not start handwriting', (WidgetTester tester) async {
+    isFeatureAvailableReturnValue = true;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EditableText(
+          controller: controller,
+          backgroundCursorColor: Colors.grey,
+          focusNode: focusNode,
+          style: textStyle,
+          cursorColor: cursorColor,
+          selectionControls: materialTextSelectionControls,
+          showSelectionHandles: true,
+        ),
+      ),
+    );
+
+    expect(focusNode.hasFocus, isFalse);
+    expect(find.byType(CompositedTransformFollower), findsNothing);
+
+    // Long press to select the first word and show both handles.
+    final Offset fieldOffset = tester.getTopLeft(find.byType(EditableText));
+    await tester.longPressAt(fieldOffset + const Offset(20.0, 10.0));
+    await tester.pump();
+    expect(find.byType(CompositedTransformFollower), findsNWidgets(2));
+
+    final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.stylus, pointer: 1);
+    final Finder endHandleFinder = find.descendant(
+      of: find.byType(CompositedTransformFollower).at(1),
+      matching: find.byType(CustomPaint),
+    );
+    await gesture.down(tester.getCenter(endHandleFinder));
+
+    expect(calls, hasLength(1));
+    expect(calls.first.method, 'Scribe.isFeatureAvailable');
+    expect(controller.selection.isCollapsed, isFalse);
+    final TextSelection selectionStart = controller.selection;
+
+    // Dragging on top of the handle extends selection like normal.
+    await gesture.moveBy(const Offset(20.0, 0.0));
+    expect(controller.selection.isCollapsed, isFalse);
+    expect(controller.selection.start, equals(selectionStart.start));
+    expect(controller.selection.end, greaterThan(selectionStart.end));
     expect(calls, hasLength(1));
 
     await gesture.up();
