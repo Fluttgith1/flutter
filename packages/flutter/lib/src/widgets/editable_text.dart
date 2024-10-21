@@ -2975,6 +2975,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
 
   // State lifecycle:
 
+  @protected
   @override
   void initState() {
     super.initState();
@@ -2998,6 +2999,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
   // cursor) are supposed to run.
   bool _tickersEnabled = true;
 
+  @protected
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -3073,6 +3075,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
     }
   }
 
+  @protected
   @override
   void didUpdateWidget(EditableText oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -3176,6 +3179,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
     }
   }
 
+  @protected
   @override
   void dispose() {
     _internalScrollController?.dispose();
@@ -5168,6 +5172,7 @@ class EditableTextState extends State<EditableText> with AutomaticKeepAliveClien
     EditableTextTapOutsideIntent: _makeOverridable(_EditableTextTapOutsideAction()),
   };
 
+  @protected
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMediaQuery(context));
