@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,7 +28,7 @@ void main() {
     // When a MissingPluginException is thrown, it is caught and a null response
     // is returned.
     expect(response, isNull);
-  });
+  }, skip: kIsWeb); // [intended]
 
   test('Scribe.isStylusHandwritingAvailable calls through to platform channel', () async {
     final List<MethodCall> calls = <MethodCall>[];
@@ -41,7 +42,7 @@ void main() {
 
     expect(calls, hasLength(1));
     expect(calls.first.method, 'Scribe.isStylusHandwritingAvailable');
-  });
+  }, skip: kIsWeb); // [intended]
 
   test('Scribe.isFeatureAvailable calls through to platform channel', () async {
     final List<MethodCall> calls = <MethodCall>[];
@@ -55,7 +56,7 @@ void main() {
 
     expect(calls, hasLength(1));
     expect(calls.first.method, 'Scribe.isFeatureAvailable');
-  });
+  }, skip: kIsWeb); // [intended]
 
   test('Scribe.startStylusHandwriting calls through to platform channel', () async {
     final List<MethodCall> calls = <MethodCall>[];
@@ -68,7 +69,7 @@ void main() {
     Scribe.startStylusHandwriting();
     expect(calls, hasLength(1));
     expect(calls.first.method, 'Scribe.startStylusHandwriting');
-  });
+  }, skip: kIsWeb); // [intended]
 }
 
 // A widget that uses ScribeClient.
