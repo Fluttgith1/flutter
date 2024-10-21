@@ -5885,20 +5885,8 @@ class _ScribeState extends State<_Scribe> implements ScribeClient {
     super.dispose();
   }
 
-  // Begin ScribeClient.
-
-  @override
-  double get devicePixelRatio => MediaQuery.devicePixelRatioOf(context);
-
-  // TODO(justinmc): ScribbleClient does this in EditableText, setting the
-  // active client on Scribble. Maybe that's better? Reconcile?
-  @override
-  bool get isActive => widget.focusNode.hasFocus;
-
   // TODO(justinmc): Scribe stylus gestures should be supported here.
   // https://github.com/flutter/flutter/issues/156018
-
-  // End ScribeClient.
 
   @override
   Widget build(BuildContext context) {

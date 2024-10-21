@@ -168,11 +168,6 @@ class Scribe {
 ///  * [ScribbleClient], which implements the iOS version of this feature,
 ///  [Scribble](https://support.apple.com/guide/ipad/enter-text-with-scribble-ipad355ab2a7/ipados).
 mixin ScribeClient {
-  bool get isActive;
-
-  // TODO(justinmc): Is there a cleaner way to adjust for the device pixel ratio?
-  double get devicePixelRatio;
-
   // TODO(justinmc): Scribe stylus gestures should be supported here.
   // https://github.com/flutter/flutter/issues/156018
 }
