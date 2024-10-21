@@ -1151,7 +1151,7 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   List<Size> get _sliderPartSizes => <Size>[
     Size(
       _sliderTheme.overlayShape!.getPreferredSize(isInteractive, isDiscrete).width,
-      _sliderTheme.thumbShape!.getPreferredSize(isInteractive, isDiscrete).height + _verticalPadding,
+      _thumbSizeHeight + _verticalPadding,
     ),
     _sliderTheme.thumbShape!.getPreferredSize(isInteractive, isDiscrete),
     _sliderTheme.tickMarkShape!.getPreferredSize(isEnabled: isInteractive, sliderTheme: sliderTheme),

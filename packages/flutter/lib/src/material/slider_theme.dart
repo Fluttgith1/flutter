@@ -711,7 +711,7 @@ class SliderThemeData with Diagnosticable {
       thumbSelector: t < 0.5 ? a.thumbSelector : b.thumbSelector,
       mouseCursor: t < 0.5 ? a.mouseCursor : b.mouseCursor,
       allowedInteraction: t < 0.5 ? a.allowedInteraction : b.allowedInteraction,
-      padding: t < 0.5 ? a.padding : b.padding,
+      padding: EdgeInsetsGeometry.lerp(a.padding, b.padding, t),
     );
   }
 

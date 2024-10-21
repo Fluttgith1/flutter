@@ -2551,7 +2551,6 @@ void main() {
     expect(const RoundedRectSliderTrackShape().isRounded, isTrue);
   });
 
-  // Regression test for https://github.com/flutter/flutter/issues/40098.
   testWidgets('Default Slider padding can be adjusted', (WidgetTester tester) async {
     Widget buildSlider({ EdgeInsetsGeometry? padding }) {
       return MaterialApp(
